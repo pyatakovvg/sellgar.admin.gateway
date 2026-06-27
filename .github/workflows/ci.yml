@@ -28,4 +28,4 @@ jobs:
         run: yarn install --immutable
 
       - name: Build admin gateway
-        run: yarn build:admin_gw
+        run: yarn build

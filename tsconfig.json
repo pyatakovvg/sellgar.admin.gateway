@@ -16,6 +16,14 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "paths": {
+      "@/api/*": ["./src/api/*"],
+      "@/common/*": ["./src/common/*"],
+      "@/config/*": ["./src/config/*"]
+    }
   },
-  "exclude": ["node_modules"],
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

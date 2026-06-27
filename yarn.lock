@@ -618,9 +618,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@gateway/admin@workspace:gateways/admin":
+"@gateway/admin@workspace:.":
   version: 0.0.0-use.local
-  resolution: "@gateway/admin@workspace:gateways/admin"
+  resolution: "@gateway/admin@workspace:."
   dependencies:
     "@nestjs/axios": 4.0.1
     "@nestjs/cli": 11.0.16
@@ -635,13 +635,21 @@ __metadata:
     "@types/express": 5.0.6
     "@types/jest": 30.0.0
     "@types/node": 25.0.10
+    "@typescript-eslint/eslint-plugin": 8.54.0
+    "@typescript-eslint/parser": 8.54.0
     axios: 1.13.3
     class-transformer: 0.5.1
     class-validator: 0.14.3
     cookie-parser: 1.4.7
     device-detector-js: 3.0.3
+    eslint: 9.39.2
+    eslint-config-prettier: 10.1.8
+    eslint-plugin-prettier: 5.5.5
     jest: 30.2.0
+    jiti: 2.6.1
+    prettier: 3.8.1
     reflect-metadata: 0.2.2
+    rimraf: 6.1.2
     rxjs: 7.8.2
     ts-jest: 29.4.6
     ts-node: 10.9.2
@@ -6473,24 +6481,6 @@ __metadata:
   checksum: 9b3e6f715b29a0245dcbc81783a7c8bd5a0804d52e0b36099856707df030dd3d31243f6fec2cc24be71bc2cc878139514fc8389d46cb0eb71255219585cd4cfd
   languageName: node
   linkType: hard
-
-"root@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "root@workspace:."
-  dependencies:
-    "@types/node": 25.0.10
-    "@typescript-eslint/eslint-plugin": 8.54.0
-    "@typescript-eslint/parser": 8.54.0
-    eslint: 9.39.2
-    eslint-config-prettier: 10.1.8
-    eslint-plugin-prettier: 5.5.5
-    jiti: 2.6.1
-    prettier: 3.8.1
-    rimraf: 6.1.2
-    ts-node: 10.9.2
-    typescript: 5.9.3
-  languageName: unknown
-  linkType: soft
 
 "router@npm:^2.2.0":
   version: 2.2.0

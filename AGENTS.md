@@ -25,27 +25,28 @@ Gateway не должен становиться владельцем домен
 .
 ├── package.json
 ├── yarn.lock
-├── gateways/
-│   └── admin/
-│       ├── package.json
-│       ├── src/
-│       │   ├── main.ts
-│       │   ├── app.module.ts
-│       │   ├── api/
-│       │   │   ├── identity_srv/
-│       │   │   ├── product_srv/
-│       │   │   └── file_srv/
-│       │   └── common/
-│       └── tsconfig.json
+├── .env.example
+├── nest-cli.json
+├── tsconfig.json
+├── tsconfig.build.json
+├── src/
+│   ├── main.ts
+│   ├── app.module.ts
+│   ├── api/
+│   │   ├── identity_srv/
+│   │   ├── product_srv/
+│   │   └── file_srv/
+│   ├── common/
+│   └── config/
 └── AGENTS.md
 ```
 
-Сейчас структура унаследована из бывшего `sellgar.server` и не является финальной. При реорганизации сохраняй поведение и меняй структуру небольшими шагами.
+Структура уже схлопнута из бывшего `gateways/admin` в корень repo. При дальнейшей реорганизации сохраняй поведение и меняй структуру небольшими шагами.
 
 Предпочтительная целевая модель:
 
 ```text
-gateways/admin/src/
+src/
   bootstrap/       # запуск приложения, HTTP/RMQ bootstrap, global pipes/filters
   config/          # env schema, typed config helpers
   common/          # общие guards, decorators, filters, cookie/agent/fingerprint helpers
@@ -67,15 +68,15 @@ gateways/admin/src/
 
 ```bash
 yarn install
-yarn build:admin_gw
-yarn dev:admin_gw
-yarn start:admin_gw
+yarn build
+yarn start:dev
+yarn start
 ```
 
 Текущая проверка сборки:
 
 ```bash
-yarn build:admin_gw
+yarn build
 ```
 
 На момент аудита сборка проходит.
@@ -95,7 +96,7 @@ Ignored/local:
 - `node_modules/`
 - `.yarn/cache/`
 - `.yarn/install-state.gz`
-- `gateways/admin/dist/`
+- `dist/`
 
 Не коммить `node_modules`, `.yarn/cache`, `.yarn/install-state.gz` без отдельного решения по zero-install стратегии.
 
@@ -103,9 +104,9 @@ Ignored/local:
 
 ### Config
 
-`ConfigModule.forRoot()` подключается в `gateways/admin/src/app.module.ts`.
+`ConfigModule.forRoot()` подключается в `src/app.module.ts`.
 
-Важное ограничение текущего кода: `gateways/admin/src/main.ts` вручную создает `new ConfigService()` до DI container. Это риск для чтения `.env`. При правках bootstrap лучше получать `ConfigService` через `app.get(ConfigService)` после `NestFactory.create(AppModule)`.
+`src/main.ts` получает `ConfigService` через DI: `app.get(ConfigService)` после `NestFactory.create(AppModule)`.
 
 ### Identity/session
 
@@ -147,12 +148,6 @@ Gateway должен владеть только transport cookie:
 
    ```bash
    yarn install --immutable
-   yarn build:admin_gw
-   ```
-
-   После схлопывания структуры в корень команда должна стать обычной:
-
-   ```bash
    yarn build
    ```
 
@@ -176,11 +171,11 @@ Gateway должен владеть только transport cookie:
 
 ### P0 - зафиксировать runtime config contract
 
-Статус: частично выполнено. `main.ts` теперь получает `ConfigService` через DI, `ConfigModule.forRoot()` использует `validateEnv`, `.env.example` дополнен HTTP адресами downstream services, а product event listener использует product event queue/exchange keys.
+Статус: выполнено. `main.ts` получает `ConfigService` через DI, `ConfigModule.forRoot()` использует `validateEnv`, `.env.example` дополнен HTTP адресами downstream services, а product event listener использует product event queue/exchange keys.
 
-1. `gateways/admin/src/main.ts` больше не создает `new ConfigService()` до Nest DI container. При этом `ConfigModule.forRoot({ envFilePath: './.env' })` все еще зависит от текущей рабочей директории запуска, пока пакет не схлопнут в корень.
+1. `src/main.ts` больше не создает `new ConfigService()` до Nest DI container.
 
-   Решение: выполнено для DI и validation. При схлопывании структуры пересмотреть путь `.env`.
+   Решение: выполнено для DI и validation.
 
 2. `main.ts` больше не читает неописанные `AMQP_ADMIN_SRV_EVENT_QUEUE` и `AMQP_EVENTS_EXCHANGE`. Product event listener использует ключи, описанные в `.env.example`:
 
@@ -215,50 +210,26 @@ Gateway должен владеть только transport cookie:
 
 ### P1 - решить судьбу монорепы внутри отдельного repo
 
-Сейчас `sellgar.admin.gateway` является отдельным GitHub repo, но внутри него сохранена мини-монорепа:
+Статус: выполнено. `gateways/admin` схлопнут в корень repo; root package теперь `@gateway/admin`, команды запускаются напрямую через `yarn build`, `yarn start:dev`, `yarn start`.
 
-```text
-package.json          # name=root, workspaces=["gateways/**/*"]
-gateways/admin/       # единственный реальный package @gateway/admin
-```
-
-Для текущей цели это скорее минус, чем плюс:
+Решение принято потому что:
 
 - workspace-level `sellgar.workspace` уже является точкой сборки нескольких repos через git submodules;
-- внутри `sellgar.admin.gateway` нет второго package, ради которого нужен Yarn workspace;
-- root package называется `root`, а реальные команды проксируются через `build:admin_gw`;
-- CI, README, onboarding и IDE получают лишний уровень вложенности;
-- будущие переносы из `sellgar.server` будут каждый раз наследовать старую папочную модель вместо продуктовой модели repo.
+- внутри `sellgar.admin.gateway` не было второго package, ради которого нужен Yarn workspace;
+- root package назывался `root`, а реальные команды проксировались через workspace aliases;
+- CI, README, onboarding и IDE получали лишний уровень вложенности.
 
-Рекомендация: схлопнуть `gateways/admin` в корень репозитория.
-
-Целевое состояние:
-
-```text
-.
-├── package.json        # name=@gateway/admin
-├── src/
-├── nest-cli.json
-├── tsconfig.json
-├── tsconfig.build.json
-├── .env.example
-├── README.md
-└── AGENTS.md
-```
-
-Оставлять монорепу внутри `sellgar.admin.gateway` имеет смысл только если есть близкий план держать здесь несколько локальных packages, например:
+Возвращать монорепу внутри `sellgar.admin.gateway` имеет смысл только если появится близкий план держать здесь несколько локальных packages, например:
 
 - несколько admin gateway приложений;
 - локальные shared libraries только для gateway зоны;
 - contract package, который реально используется несколькими packages внутри этого же repo.
 
-Пока такого плана нет, монорепа не помогает развитию. Она маскирует реальный package boundary и размазывает ответственность между workspace repo и service repo.
-
 ### P1 - привести ownership зависимостей к реальному коду
 
 Статус: выполнено для известных кандидатов. Удалены dead `sign-up` слой, Passport integration, `@nestjs/jwt` и неиспользуемые зависимости; `JwtAuthGuard` теперь обычный `CanActivate`, а `CookiesService` только парсит gateway cookie payload.
 
-Удалено после проверки `yarn build:admin_gw`:
+Удалено после проверки `yarn build`:
 
 - `pg` - gateway не должен ходить в Postgres напрямую;
 - `sharp` и `@types/sharp` - image processing должен принадлежать `file.service`, не gateway;
@@ -337,12 +308,12 @@ src/
    - cookie options централизованы;
    - cookie выставляется без gateway-owned `maxAge`/`expires`.
 
-5. Схлопнуть mini-monorepo в корень repo, если не принято явное решение оставить несколько packages.
+5. Схлопнуть mini-monorepo в корень repo - выполнено.
 
 6. Удалять зависимости маленькими коммитами:
    - сначала dead sign-up/passport - выполнено;
    - затем unused runtime deps - выполнено для найденных кандидатов;
-   - после каждого шага запускать `yarn build:admin_gw` или, после схлопывания, `yarn build`.
+   - после каждого шага запускать `yarn build`.
 
 7. Добавить GitHub Actions CI вместо GitLab CI.
 
@@ -354,5 +325,5 @@ src/
 - Не меняй auth/session поведение без явного решения, потому что это security-sensitive зона.
 - Не добавляй domain ownership в gateway: домен остается в сервисах.
 - Если меняешь env key, обнови `.env.example`, README и место чтения config.
-- Если меняешь зависимости, проверяй `yarn build:admin_gw` и коммить `yarn.lock`.
+- Если меняешь зависимости, проверяй `yarn build` и коммить `yarn.lock`.
 - Если находишь новое постоянное правило или проблему, дополни этот файл.
