@@ -1,6 +1,5 @@
-import { Controller, Post, Body, Req, Res } from '@nestjs/common';
+import { Controller, Post, Body, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Response, Request } from 'express';
-import { ConfigService } from '@nestjs/config';
 
 import { LoginDto } from './dto/login.dto';
 
@@ -10,6 +9,7 @@ import { SessionService } from '../../session/service/session.service';
 import { Public } from '@/common/decorators/public.decorator';
 import { AuthUuid } from '@/common/decorators/auth-uuid.decorator';
 
+import { AuthCookieService } from '@/common/services/auth-cookie.service';
 import { AgentService } from '@/common/services/agent/agent.service';
 import { FingerprintService } from '@/common/services/fingerprint/fingerprint.service';
 
@@ -18,7 +18,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionService: SessionService,
-    private readonly config: ConfigService,
+    private readonly authCookieService: AuthCookieService,
     private readonly agentService: AgentService,
     private readonly fingerprintService: FingerprintService,
   ) {}
@@ -37,11 +37,7 @@ export class AuthController {
 
     const session = await this.sessionService.create({ userUuid: user.uuid, device: agent.deviceName, fingerprint });
 
-    res.cookie(this.config.get('AUTH_COOKIE'), JSON.stringify(session), {
-      maxAge: this.config.get('AUTH_COOKIE_EXTEND'),
-      httpOnly: true,
-      secure: true,
-    });
+    res.cookie(this.authCookieService.getName(), JSON.stringify(session), this.authCookieService.getOptions());
 
     res.status(200).json({ data: null, meta: {} });
   }
@@ -58,9 +54,8 @@ export class AuthController {
     const session = await this.sessionService.find({ userUuid: uuid, fingerprint });
 
     if (!session) {
+      throw new UnauthorizedException();
     }
-
-    console.log('Sign out session:', session);
 
     await this.sessionService.remove({
       uuid: session.sessionUuid,
@@ -68,11 +63,7 @@ export class AuthController {
       fingerprint,
     });
 
-    res.cookie(this.config.get('AUTH_COOKIE'), null, {
-      maxAge: this.config.get('AUTH_COOKIE_EXTEND'),
-      httpOnly: true,
-      secure: true,
-    });
+    res.cookie(this.authCookieService.getName(), null, this.authCookieService.getOptions());
 
     res.status(200).json({ data: null, meta: {} });
   }

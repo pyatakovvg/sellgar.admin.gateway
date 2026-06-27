@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CookiesService } from '@/common/services/cookies.service';
+import { AuthCookieService } from '@/common/services/auth-cookie.service';
 import { AgentService } from '@/common/services/agent/agent.service';
 import { FingerprintService } from '@/common/services/fingerprint/fingerprint.service';
 
@@ -44,6 +45,7 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
   controllers: [],
   providers: [
     CookiesService,
+    AuthCookieService,
     AgentService,
     FingerprintService,
     {

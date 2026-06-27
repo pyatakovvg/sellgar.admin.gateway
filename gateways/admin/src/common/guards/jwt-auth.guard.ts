@@ -1,11 +1,11 @@
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { ConfigService } from '@nestjs/config';
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { CookiesService } from '../services/cookies.service';
 
+import { AuthCookieService } from '@/common/services/auth-cookie.service';
 import { AgentService } from '@/common/services/agent/agent.service';
 import { FingerprintService } from '@/common/services/fingerprint/fingerprint.service';
 
@@ -25,9 +25,9 @@ interface ICookie {
 export class JwtAuthGuard extends AuthGuard('jwt') {
   constructor(
     private readonly reflector: Reflector,
-    private readonly config: ConfigService,
     private readonly tokenService: TokenService,
     private readonly cookieService: CookiesService,
+    private readonly authCookieService: AuthCookieService,
     private readonly sessionService: SessionService,
     private readonly agentService: AgentService,
     private readonly fingerprintService: FingerprintService,
@@ -48,18 +48,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     const response: Response = context.switchToHttp().getResponse();
 
     const cookie = await this.getCookie(request);
-    console.info('Cookie:', cookie);
 
-    console.info('Refresh token start:', {
-      sessionUuid: cookie.sessionUuid,
-      token: cookie.refreshToken,
-    });
     const refreshToken = await this.tokenService.verifyRefreshToken({
       sessionUuid: cookie.sessionUuid,
       token: cookie.refreshToken,
     });
-
-    console.info('Refresh token result:', refreshToken);
 
     if (refreshToken.data.status === 'EXPIRED') {
       await this.restoreSession(request, response, cookie);
@@ -69,8 +62,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     }
 
     const accessToken = await this.tokenService.verifyAccessToken({ token: cookie.accessToken });
-
-    console.info('Access token result:', accessToken);
 
     if (accessToken.data.status === 'VERIFY') {
       request.user = accessToken.data.user;
@@ -88,7 +79,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   private async getCookie(request: Request): Promise<ICookie> {
-    const cookie = request.cookies[this.config.get('AUTH_COOKIE')];
+    const cookie = request.cookies[this.authCookieService.getName()];
 
     const agent = await this.agentService.get(request);
     const fingerprint = await this.fingerprintService.generate({
@@ -110,31 +101,17 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
   }
 
   private async restoreSession(request: Request, response: Response, cookie: ICookie) {
-    console.info('Restore session start', {
-      sessionUuid: cookie.sessionUuid,
-      refreshToken: cookie.refreshToken,
-      fingerprint: cookie.fingerprint,
-    });
-
     const newSession = await this.sessionService.restore({
       sessionUuid: cookie.sessionUuid,
       refreshToken: cookie.refreshToken,
       fingerprint: cookie.fingerprint,
     });
 
-    console.info('New session:', newSession);
-
     const payload = await this.tokenService.verifyAccessToken({ token: newSession.accessToken });
-
-    console.info('Verify session:', payload);
 
     request.user = payload.data.user;
 
-    response.cookie(this.config.get('AUTH_COOKIE'), JSON.stringify(newSession), {
-      maxAge: this.config.get('AUTH_COOKIE_EXTEND'),
-      httpOnly: true,
-      secure: true,
-    });
+    response.cookie(this.authCookieService.getName(), JSON.stringify(newSession), this.authCookieService.getOptions());
   }
 
   private async refreshSession(request: Request, response: Response, cookie: ICookie) {
@@ -148,10 +125,6 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
     request.user = payload.data.user;
 
-    response.cookie(this.config.get('AUTH_COOKIE'), JSON.stringify(newSession), {
-      maxAge: this.config.get('AUTH_COOKIE_EXTEND'),
-      httpOnly: true,
-      secure: true,
-    });
+    response.cookie(this.authCookieService.getName(), JSON.stringify(newSession), this.authCookieService.getOptions());
   }
 }

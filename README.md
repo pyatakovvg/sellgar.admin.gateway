@@ -65,6 +65,13 @@ cp gateways/admin/.env.example gateways/admin/.env
 
 Проверить, что в `.env` есть адреса RabbitMQ и downstream services. Приложение валидирует обязательные env keys при старте и завершится с явной ошибкой, если ключ отсутствует или числовой ключ задан не числом.
 
+Cookie policy задается через:
+
+- `AUTH_COOKIE` - имя cookie;
+- `AUTH_COOKIE_EXTEND` - legacy maxAge в миллисекундах;
+- `AUTH_COOKIE_SECURE` - `true` для HTTPS окружений, `false` для локального HTTP;
+- `AUTH_COOKIE_SAME_SITE` - `strict`, `lax` или `none`.
+
 Запуск:
 
 ```bash

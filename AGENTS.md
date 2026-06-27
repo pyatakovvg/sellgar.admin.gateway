@@ -199,17 +199,19 @@ Gateway должен владеть только transport cookie:
 
 ### P0 - закрыть security debt в auth/session
 
-1. `JwtAuthGuard` логирует cookie, refresh token, access token result и session payload. Это production blocker.
+Статус: частично выполнено. Из активного auth/session flow убраны логи cookie/token/session payload. Cookie options вынесены в `AuthCookieService`; `.env.example` дополнен `AUTH_COOKIE_SECURE` и `AUTH_COOKIE_SAME_SITE`; env validation проверяет эти keys.
 
-   Решение: удалить sensitive logs. Если нужны диагностики, логировать только request id, session id hash/short id и тип ошибки.
+1. `JwtAuthGuard` больше не логирует cookie, refresh token, access token result и session payload.
 
-2. Gateway сейчас ставит cookie с `maxAge: AUTH_COOKIE_EXTEND`. По принятому контракту `identity.service` владеет валидностью сессии и TTL; gateway владеет только cookie transport.
+   Решение: выполнено. Если нужны диагностики, логировать только request id, session id hash/short id и тип ошибки.
 
-   Решение: отдельно принять cookie policy. Предпочтительный контракт: gateway выставляет session cookie (`httpOnly`, `sameSite`, `secure` по окружению), а `identity.service` решает active/expired/revoked/renew.
+2. Gateway все еще ставит cookie с `maxAge: AUTH_COOKIE_EXTEND`. По принятому контракту `identity.service` владеет валидностью сессии и TTL; gateway владеет только cookie transport.
 
-3. `secure: true` сейчас жестко включен в auth middleware/controller/guard. В локальном HTTP окружении это может ломать cookie flow.
+   Решение: cookie options централизованы, но TTL semantics пока не менялись. Следующий auth шаг - принять решение: оставить legacy `maxAge` или перейти на session cookie.
 
-   Решение: вынести cookie options в typed config и различать local/prod.
+3. `secure: true` больше не жестко включен в auth middleware/controller/guard.
+
+   Решение: выполнено через `AUTH_COOKIE_SECURE` и `AuthCookieService`.
 
 ### P1 - решить судьбу монорепы внутри отдельного repo
 
@@ -330,7 +332,10 @@ src/
    - env validation;
    - синхронизировать `.env.example` с реально читаемыми keys.
 
-4. Убрать sensitive logs и принять cookie/session policy.
+4. Убрать sensitive logs и принять cookie/session policy - частично выполнено:
+   - sensitive auth/session logs убраны;
+   - cookie options централизованы;
+   - TTL/session-cookie policy еще требует отдельного решения.
 
 5. Схлопнуть mini-monorepo в корень repo, если не принято явное решение оставить несколько packages.
 
