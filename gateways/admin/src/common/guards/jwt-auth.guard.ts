@@ -1,6 +1,5 @@
 import { Reflector } from '@nestjs/core';
-import { AuthGuard } from '@nestjs/passport';
-import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { CookiesService } from '../services/cookies.service';
@@ -21,8 +20,12 @@ interface ICookie {
   fingerprint: string;
 }
 
+type AuthenticatedRequest = Request & {
+  user?: unknown;
+};
+
 @Injectable()
-export class JwtAuthGuard extends AuthGuard('jwt') {
+export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly tokenService: TokenService,
@@ -31,9 +34,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     private readonly sessionService: SessionService,
     private readonly agentService: AgentService,
     private readonly fingerprintService: FingerprintService,
-  ) {
-    super();
-  }
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
@@ -44,7 +45,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     if (isPublic) {
       return true;
     }
-    const request: Request = context.switchToHttp().getRequest();
+    const request: AuthenticatedRequest = context.switchToHttp().getRequest();
     const response: Response = context.switchToHttp().getResponse();
 
     const cookie = await this.getCookie(request);
@@ -100,7 +101,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     };
   }
 
-  private async restoreSession(request: Request, response: Response, cookie: ICookie) {
+  private async restoreSession(request: AuthenticatedRequest, response: Response, cookie: ICookie) {
     const newSession = await this.sessionService.restore({
       sessionUuid: cookie.sessionUuid,
       refreshToken: cookie.refreshToken,
@@ -114,7 +115,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     response.cookie(this.authCookieService.getName(), JSON.stringify(newSession), this.authCookieService.getOptions());
   }
 
-  private async refreshSession(request: Request, response: Response, cookie: ICookie) {
+  private async refreshSession(request: AuthenticatedRequest, response: Response, cookie: ICookie) {
     const newSession = await this.sessionService.refresh({
       sessionUuid: cookie.sessionUuid,
       refreshToken: cookie.refreshToken,

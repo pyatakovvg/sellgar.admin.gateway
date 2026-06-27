@@ -14,7 +14,6 @@ export class AuthCookieService {
 
   getOptions(): CookieOptions {
     return {
-      maxAge: this.config.getOrThrow<number>('AUTH_COOKIE_EXTEND'),
       httpOnly: true,
       secure: this.config.getOrThrow<boolean>('AUTH_COOKIE_SECURE'),
       sameSite: this.config.getOrThrow<AuthCookieSameSite>('AUTH_COOKIE_SAME_SITE'),

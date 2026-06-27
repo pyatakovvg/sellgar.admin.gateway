@@ -119,7 +119,7 @@ Gateway должен владеть только transport cookie:
 - `secure` в зависимости от окружения;
 - сериализация/удаление cookie.
 
-Не переноси session lifetime в gateway без отдельного решения. Текущий `AUTH_COOKIE_EXTEND` и `maxAge` в gateway требуют пересмотра.
+Не переноси session lifetime в gateway без отдельного решения. Gateway выставляет session cookie без `maxAge`/`expires`; session lifetime остается в `identity.service`.
 
 ### Downstream services
 
@@ -199,15 +199,15 @@ Gateway должен владеть только transport cookie:
 
 ### P0 - закрыть security debt в auth/session
 
-Статус: частично выполнено. Из активного auth/session flow убраны логи cookie/token/session payload. Cookie options вынесены в `AuthCookieService`; `.env.example` дополнен `AUTH_COOKIE_SECURE` и `AUTH_COOKIE_SAME_SITE`; env validation проверяет эти keys.
+Статус: выполнено. Из активного auth/session flow убраны логи cookie/token/session payload. Cookie options вынесены в `AuthCookieService`; `.env.example` дополнен `AUTH_COOKIE_SECURE` и `AUTH_COOKIE_SAME_SITE`; env validation проверяет эти keys. Gateway выставляет session cookie без `maxAge`/`expires`.
 
 1. `JwtAuthGuard` больше не логирует cookie, refresh token, access token result и session payload.
 
    Решение: выполнено. Если нужны диагностики, логировать только request id, session id hash/short id и тип ошибки.
 
-2. Gateway все еще ставит cookie с `maxAge: AUTH_COOKIE_EXTEND`. По принятому контракту `identity.service` владеет валидностью сессии и TTL; gateway владеет только cookie transport.
+2. Gateway больше не ставит cookie с `maxAge`. По принятому контракту `identity.service` владеет валидностью сессии и TTL; gateway владеет только cookie transport.
 
-   Решение: cookie options централизованы, но TTL semantics пока не менялись. Следующий auth шаг - принять решение: оставить legacy `maxAge` или перейти на session cookie.
+   Решение: выполнено. `AUTH_COOKIE_EXTEND` удален из env contract, cookie стала session cookie.
 
 3. `secure: true` больше не жестко включен в auth middleware/controller/guard.
 
@@ -256,31 +256,31 @@ gateways/admin/       # единственный реальный package @gatew
 
 ### P1 - привести ownership зависимостей к реальному коду
 
-Кандидаты на удаление после отдельного commit и проверки `yarn build:admin_gw`:
+Статус: выполнено для известных кандидатов. Удалены dead `sign-up` слой, Passport integration, `@nestjs/jwt` и неиспользуемые зависимости; `JwtAuthGuard` теперь обычный `CanActivate`, а `CookiesService` только парсит gateway cookie payload.
+
+Удалено после проверки `yarn build:admin_gw`:
 
 - `pg` - gateway не должен ходить в Postgres напрямую;
 - `sharp` и `@types/sharp` - image processing должен принадлежать `file.service`, не gateway;
 - `moment` - в `src` не используется;
 - `rand-token` - в `src` не используется;
 - `source-map-support` - не используется в runtime scripts;
-- `@types/amqplib` - если прямого `amqplib` API нет;
-- `supertest` и `@types/supertest` - оставить только если будут реальные e2e tests;
-- `passport-local` - не видно рабочей local strategy;
-- `passport`, `passport-jwt`, `@nestjs/passport`, `@types/passport-jwt` - пересмотреть после решения по `JwtAuthGuard`.
+- `@types/amqplib` - прямого `amqplib` API нет;
+- `supertest` и `@types/supertest` - реальных e2e tests сейчас нет;
+- `passport-local`;
+- `passport`;
+- `passport-jwt`;
+- `@nestjs/passport`;
+- `@types/passport-jwt`;
+- `@nestjs/jwt`;
+- `JwtModule`;
+- `CookiesService.verifyToken()`.
 
 Нельзя удалять `@nestjs/axios`/`axios`, пока file gateway ходит в `file.service` по HTTP.
 
-`@nestjs/jwt` используется только через `CookiesService.verifyToken()`. Если этот метод не нужен, удалить и `JwtModule`, и `CookiesService.verifyToken()`.
-
 ### P1 - убрать мертвые flows
 
-`api/identity_srv/sign-up` сейчас выглядит как недособранный слой:
-
-- module и gateway в основном закомментированы;
-- passport strategies лежат рядом, но не подключены как рабочий flow;
-- текущий `JwtAuthGuard` не использует passport strategy как точку принятия решения.
-
-Решение: либо удалить sign-up слой из gateway, либо восстановить как полноценный публичный admin flow. Оставлять закомментированный слой нельзя: он искажает картину auth architecture.
+Статус: выполнено. `api/identity_srv/sign-up` удален как недособранный слой: module/gateway/service были закомментированы, а passport strategies не были подключены как рабочий flow.
 
 ### P1 - README как runtime contract
 
@@ -332,16 +332,16 @@ src/
    - env validation;
    - синхронизировать `.env.example` с реально читаемыми keys.
 
-4. Убрать sensitive logs и принять cookie/session policy - частично выполнено:
+4. Убрать sensitive logs и принять cookie/session policy - выполнено:
    - sensitive auth/session logs убраны;
    - cookie options централизованы;
-   - TTL/session-cookie policy еще требует отдельного решения.
+   - cookie выставляется без gateway-owned `maxAge`/`expires`.
 
 5. Схлопнуть mini-monorepo в корень repo, если не принято явное решение оставить несколько packages.
 
 6. Удалять зависимости маленькими коммитами:
-   - сначала dead sign-up/passport;
-   - затем unused runtime deps;
+   - сначала dead sign-up/passport - выполнено;
+   - затем unused runtime deps - выполнено для найденных кандидатов;
    - после каждого шага запускать `yarn build:admin_gw` или, после схлопывания, `yarn build`.
 
 7. Добавить GitHub Actions CI вместо GitLab CI.

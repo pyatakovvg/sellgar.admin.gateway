@@ -1,14 +1,7 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class CookiesService {
-  constructor(private readonly jwtService: JwtService) {}
-
-  async verifyToken(token: string, secret: string) {
-    return this.jwtService.verifyAsync(token, { secret });
-  }
-
   extractAccessTokenFromCookie(cookie: string): string {
     if (cookie) {
       try {

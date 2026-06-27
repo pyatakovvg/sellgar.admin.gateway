@@ -68,9 +68,10 @@ cp gateways/admin/.env.example gateways/admin/.env
 Cookie policy задается через:
 
 - `AUTH_COOKIE` - имя cookie;
-- `AUTH_COOKIE_EXTEND` - legacy maxAge в миллисекундах;
 - `AUTH_COOKIE_SECURE` - `true` для HTTPS окружений, `false` для локального HTTP;
 - `AUTH_COOKIE_SAME_SITE` - `strict`, `lax` или `none`.
+
+Gateway выставляет session cookie без `maxAge`/`expires`. Срок жизни сессии и token lifecycle принадлежат `identity.service`.
 
 Запуск:
 

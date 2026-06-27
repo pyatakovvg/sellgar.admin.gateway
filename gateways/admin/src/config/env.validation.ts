@@ -19,7 +19,7 @@ const requiredStringKeys = [
   'API_PRODUCT_SRV',
 ];
 
-const requiredNumberKeys = ['PORT', 'AUTH_COOKIE_EXTEND', 'AMQP_PORT'];
+const requiredNumberKeys = ['PORT', 'AMQP_PORT'];
 
 const requiredBooleanKeys = ['AUTH_COOKIE_SECURE'];
 

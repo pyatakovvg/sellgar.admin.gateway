@@ -1,9 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
-import { PassportModule } from '@nestjs/passport';
 import { HttpModule } from '@nestjs/axios';
-import { JwtModule } from '@nestjs/jwt';
 
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CookiesService } from '@/common/services/cookies.service';
@@ -25,15 +23,8 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
     IdentitySrvModule,
     ApiProductV2Module,
 
-    JwtModule.register({
-      global: true,
-    }),
     HttpModule.register({
       global: true,
-    }),
-    PassportModule.register({
-      session: false,
-      defaultStrategy: 'jwt',
     }),
     ConfigModule.forRoot({
       envFilePath: './.env',
