@@ -131,71 +131,215 @@ Gateway должен владеть только transport cookie:
 
 Если добавляешь новый вызов к сервису, сначала выбери слой клиента (`clients/*` в целевой модели), а не размазывай `ClientProxy`/`HttpService` по controller/service файлам.
 
-## Найдено аудитом
+## Архитектурный аудит
 
-### Критично
+Этот аудит рассматривает репозиторий как самостоятельный продуктовый пакет, а не как папку, механически вынутую из старого `sellgar.server`.
 
-1. `main.ts` использует env keys, которых нет в `.env.example`:
-   - `AMQP_ADMIN_SRV_EVENT_QUEUE`
-   - `AMQP_EVENTS_EXCHANGE`
+### P0 - убрать ложные сигналы о владении и CI
 
-   В `.env.example` сейчас есть:
+1. `.gitlab-ci.yml` сейчас вреден.
+
+   Файл описывает GitLab pipeline для `services/company_srv/**/*`, которого в этом репозитории нет. Репозиторий живет в GitHub, поэтому файл не просто бесполезен: он создает ложное ожидание, что CI уже есть и что пакет связан с `company_srv`.
+
+   Решение: удалить `.gitlab-ci.yml`. Если нужен CI, добавить `.github/workflows/ci.yml` с реальными командами:
+
+   ```bash
+   yarn install --immutable
+   yarn build:admin_gw
+   ```
+
+   После схлопывания структуры в корень команда должна стать обычной:
+
+   ```bash
+   yarn build
+   ```
+
+2. `docker-compose.yaml` не должен оставаться в текущем виде.
+
+   В нем закомментированы RabbitMQ/Postgres, а реально активен только `monorepo_minio`. MinIO не является зависимостью admin gateway напрямую: gateway ходит в `file.service` по HTTP, а уже `file.service` владеет MinIO, object keys, metadata и lifecycle.
+
+   Решение: удалить из admin gateway или вынести в workspace-level dev infra. Если нужен compose именно для gateway, он должен описывать только зависимости, нужные для локального запуска gateway, и не называться `monorepo_*`.
+
+3. `docker-compose-minio.yaml` дублирует MinIO и тоже не принадлежит admin gateway.
+
+   MinIO compose должен жить в `sellgar.file.service` или в общей dev-инфре workspace. Два MinIO compose файла с разными credentials (`admin/admin` и `minioadmin/minioadmin`) будут создавать расхождение окружений.
+
+   Решение: удалить из этого репозитория после переноса нужной dev-инфры в правильное место.
+
+4. `rabbit.sh` не должен быть частью пакета.
+
+   Это OS-level install script: `sudo`, apt repositories, systemctl, включение plugin. Такой скрипт не является ни build dependency, ни runtime contract admin gateway. Если RabbitMQ уже запускается локально или через Docker, этот файл опасен тем, что следующий разработчик может начать чинить пакет через изменение ОС.
+
+   Решение: удалить. Документировать RabbitMQ как внешнюю dev dependency в README/workspace docs. Для воспроизводимой локальной среды использовать compose на уровне workspace, а не shell install script внутри gateway.
+
+### P0 - зафиксировать runtime config contract
+
+1. `gateways/admin/src/main.ts` создает `new ConfigService()` до Nest DI container. При этом `ConfigModule.forRoot({ envFilePath: './.env' })` подключен внутри `AppModule`. Это делает чтение `.env` в bootstrap неочевидным и зависит от текущей рабочей директории запуска.
+
+   Решение: после `NestFactory.create(AppModule)` получать config через `app.get(ConfigService)`. Параллельно добавить env validation, чтобы приложение падало на старте с понятной ошибкой, а не стартовало с `undefined` queue/exchange.
+
+2. `main.ts` читает `AMQP_ADMIN_SRV_EVENT_QUEUE` и `AMQP_EVENTS_EXCHANGE`, но `gateways/admin/.env.example` содержит другие ключи:
+
    - `AMQP_ADMIN_GATEWAY_PRODUCT_SRV_EVENT_QUEUE`
    - `AMQP_ADMIN_GATEWAY_IDENTITY_SRV_EVENT_QUEUE`
    - `AMQP_PRODUCT_SRV_EXCHANGE`
    - `AMQP_IDENTITY_SRV_EXCHANGE`
 
-   Нужно привести event queue/exchange config к одной модели. До этого event microservice может стартовать с `undefined` queue/exchange.
-
-2. В `JwtAuthGuard` логируются cookie, refresh token, access token result и session payload. Это нельзя оставлять в production/runtime logs.
+   Решение: выбрать одну модель событий. Если gateway слушает только product events, bootstrap должен читать product event queue/exchange. Если gateway слушает общий events exchange, `.env.example` должен явно описывать общий queue/exchange.
 
 3. `API_FILE_SRV` используется в file gateway, но отсутствует в `.env.example`.
 
-4. `test:e2e` указывает на `env.d.ts/jest-e2e.json`, но e2e config/test files в пакете не обнаружены.
+   Решение: добавить в env contract. Без этого новый разработчик не сможет поднять file flow из документации.
 
-### Нужно пересмотреть
+4. `ORIGINS` читается как обязательная строка и сразу вызывает `.split(';')`. При пустом env приложение упадет невалидной JS ошибкой.
 
-1. `JwtAuthGuard extends AuthGuard('jwt')`, но сам полностью переопределяет `canActivate()` и вручную ходит в `identity.service`. Passport strategy фактически не является рабочей точкой входа.
+   Решение: env validation + typed config helper.
 
-2. `PassportModule`, `@nestjs/passport`, `passport`, `passport-jwt`, `passport-local` выглядят кандидатами на удаление после отдельной проверки сборки и runtime auth flow.
+### P0 - закрыть security debt в auth/session
 
-3. `@nestjs/jwt` и `JwtService` используются только в `CookiesService.verifyToken()`, но этот метод не вызывается. Если метод не нужен, `@nestjs/jwt` тоже может стать лишним.
+1. `JwtAuthGuard` логирует cookie, refresh token, access token result и session payload. Это production blocker.
 
-4. `pg`, `sharp`, `moment`, `rand-token` в `@gateway/admin` выглядят неиспользуемыми в `src`.
+   Решение: удалить sensitive logs. Если нужны диагностики, логировать только request id, session id hash/short id и тип ошибки.
 
-5. `sign-up` module/strategies сейчас в основном закомментированы или не подключены. Нужно либо удалить мертвый слой, либо вернуть как полноценный рабочий flow.
+2. Gateway сейчас ставит cookie с `maxAge: AUTH_COOKIE_EXTEND`. По принятому контракту `identity.service` владеет валидностью сессии и TTL; gateway владеет только cookie transport.
 
-6. `.gitlab-ci.yml` не адаптирован под пакет: там остались `services/company_srv` и `deploy_service1`.
+   Решение: отдельно принять cookie policy. Предпочтительный контракт: gateway выставляет session cookie (`httpOnly`, `sameSite`, `secure` по окружению), а `identity.service` решает active/expired/revoked/renew.
 
-7. `README.md` пустой. Нужен минимальный README с назначением, env, командами и downstream dependencies.
+3. `secure: true` сейчас жестко включен в auth middleware/controller/guard. В локальном HTTP окружении это может ломать cookie flow.
 
-8. `docker-compose.yaml` и `docker-compose-minio.yaml` выглядят как остаток общей dev-инфры. MinIO скорее относится к `file.service` или workspace dev-инфре, а не к admin gateway.
+   Решение: вынести cookie options в typed config и различать local/prod.
 
-9. В коде есть временные `console.log`/`console.info`. Для production-кода использовать `Logger` и не логировать секреты/token/cookie/session payload.
+### P1 - решить судьбу монорепы внутри отдельного repo
+
+Сейчас `sellgar.admin.gateway` является отдельным GitHub repo, но внутри него сохранена мини-монорепа:
+
+```text
+package.json          # name=root, workspaces=["gateways/**/*"]
+gateways/admin/       # единственный реальный package @gateway/admin
+```
+
+Для текущей цели это скорее минус, чем плюс:
+
+- workspace-level `sellgar.workspace` уже является точкой сборки нескольких repos через git submodules;
+- внутри `sellgar.admin.gateway` нет второго package, ради которого нужен Yarn workspace;
+- root package называется `root`, а реальные команды проксируются через `build:admin_gw`;
+- CI, README, onboarding и IDE получают лишний уровень вложенности;
+- будущие переносы из `sellgar.server` будут каждый раз наследовать старую папочную модель вместо продуктовой модели repo.
+
+Рекомендация: схлопнуть `gateways/admin` в корень репозитория.
+
+Целевое состояние:
+
+```text
+.
+├── package.json        # name=@gateway/admin
+├── src/
+├── nest-cli.json
+├── tsconfig.json
+├── tsconfig.build.json
+├── .env.example
+├── README.md
+└── AGENTS.md
+```
+
+Оставлять монорепу внутри `sellgar.admin.gateway` имеет смысл только если есть близкий план держать здесь несколько локальных packages, например:
+
+- несколько admin gateway приложений;
+- локальные shared libraries только для gateway зоны;
+- contract package, который реально используется несколькими packages внутри этого же repo.
+
+Пока такого плана нет, монорепа не помогает развитию. Она маскирует реальный package boundary и размазывает ответственность между workspace repo и service repo.
+
+### P1 - привести ownership зависимостей к реальному коду
+
+Кандидаты на удаление после отдельного commit и проверки `yarn build:admin_gw`:
+
+- `pg` - gateway не должен ходить в Postgres напрямую;
+- `sharp` и `@types/sharp` - image processing должен принадлежать `file.service`, не gateway;
+- `moment` - в `src` не используется;
+- `rand-token` - в `src` не используется;
+- `source-map-support` - не используется в runtime scripts;
+- `@types/amqplib` - если прямого `amqplib` API нет;
+- `supertest` и `@types/supertest` - оставить только если будут реальные e2e tests;
+- `passport-local` - не видно рабочей local strategy;
+- `passport`, `passport-jwt`, `@nestjs/passport`, `@types/passport-jwt` - пересмотреть после решения по `JwtAuthGuard`.
+
+Нельзя удалять `@nestjs/axios`/`axios`, пока file gateway ходит в `file.service` по HTTP.
+
+`@nestjs/jwt` используется только через `CookiesService.verifyToken()`. Если этот метод не нужен, удалить и `JwtModule`, и `CookiesService.verifyToken()`.
+
+### P1 - убрать мертвые flows
+
+`api/identity_srv/sign-up` сейчас выглядит как недособранный слой:
+
+- module и gateway в основном закомментированы;
+- passport strategies лежат рядом, но не подключены как рабочий flow;
+- текущий `JwtAuthGuard` не использует passport strategy как точку принятия решения.
+
+Решение: либо удалить sign-up слой из gateway, либо восстановить как полноценный публичный admin flow. Оставлять закомментированный слой нельзя: он искажает картину auth architecture.
+
+### P1 - README как runtime contract
+
+`README.md` пустой. Для отдельного repo это blocker для развития.
+
+Минимальный README должен отвечать:
+
+- что делает admin gateway;
+- какие downstream services нужны: identity, product, file;
+- какие transport protocols используются: HTTP от UI, RMQ к identity/product, HTTP к file;
+- какие env keys обязательны;
+- как запустить локально;
+- какие команды CI должны выполнять;
+- где живет общая workspace dev infra.
+
+### P2 - структура кода после стабилизации
+
+После удаления мусора и фикса config/auth стоит переносить код к модели:
+
+```text
+src/
+  bootstrap/
+  config/
+  common/
+  modules/
+    identity/
+    product/
+    file/
+  clients/
+    identity/
+    product/
+    file/
+```
+
+Правило: `modules/*` описывают публичный admin HTTP API, `clients/*` инкапсулируют RMQ/HTTP вызовы к downstream services. Не размазывать `ClientProxy` и `HttpService` по controller/service слоям.
 
 ## Рекомендуемый порядок работ
 
-1. Исправить config/bootstrap:
-   - получать `ConfigService` через DI;
-   - добавить env validation;
-   - синхронизировать `.env.example` с реальными ключами.
+1. Удалить/перенести чужую инфраструктуру:
+   - `.gitlab-ci.yml`;
+   - `docker-compose.yaml`;
+   - `docker-compose-minio.yaml`;
+   - `rabbit.sh`.
 
-2. Убрать sensitive logs из auth/session flow.
+2. Написать нормальный `README.md` и зафиксировать, где теперь лежит dev infra.
 
-3. Согласовать cookie policy:
-   - session cookie или maxAge;
-   - `secure` для local/prod;
-   - `sameSite`;
-   - кто владеет TTL.
+3. Исправить config/bootstrap:
+   - `app.get(ConfigService)` вместо `new ConfigService()`;
+   - env validation;
+   - синхронизировать `.env.example` с реально читаемыми keys.
 
-4. Почистить package dependencies:
-   - сначала удалить явно мертвый `sign-up/passport` слой или вернуть его;
-   - затем удалить неиспользуемые пакеты;
-   - после каждого шага запускать `yarn build:admin_gw`.
+4. Убрать sensitive logs и принять cookie/session policy.
 
-5. Обновить `.gitlab-ci.yml` и `README.md`.
+5. Схлопнуть mini-monorepo в корень repo, если не принято явное решение оставить несколько packages.
 
-6. Только после стабилизации runtime-контракта переносить структуру к `modules/*` и `clients/*`.
+6. Удалять зависимости маленькими коммитами:
+   - сначала dead sign-up/passport;
+   - затем unused runtime deps;
+   - после каждого шага запускать `yarn build:admin_gw` или, после схлопывания, `yarn build`.
+
+7. Добавить GitHub Actions CI вместо GitLab CI.
+
+8. Только после этого переносить source structure к `modules/*` и `clients/*`.
 
 ## Правила для следующих агентов
 
