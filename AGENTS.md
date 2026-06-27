@@ -11,7 +11,8 @@ cookie/session auth, CORS, guards и общий exception filter.
 - `src/api/identity_srv` - admin adapter к `services/identity_srv`; внутри
   `api/*` лежат внешние контракты, а `helpers/session-auth` содержит
   gateway-side session auth обвязку.
-- `src/api/product_srv/v2` - admin-контракты управления каталогом и магазинами.
+- `src/api/product_srv/v2` - admin-контракты управления каталогом.
+- `src/api/shop_srv/v1` - admin HTTP-контракт магазинов; сейчас сохраняет публичный route `/v2/shops`, но ходит в `SHOP_COMMAND_SERVICE`.
 - `src/api/file_srv/v1` - admin-доступ к файловому сервису.
 - `src/common` - только общая инфраструктура gateway, сейчас exception filter.
 
@@ -21,6 +22,7 @@ cookie/session auth, CORS, guards и общий exception filter.
   переносите сюда владение сущностями identity/product.
 - При изменении auth/session/token сверяйте одноименные сервисы в `services/identity_srv`.
 - При изменении product/file endpoint сверяйте сервис-владелец и DTO на стороне `services/product_srv` или `services/file_srv`.
+- `/v2/shops` является HTTP-контрактом admin gateway, но сервис-владелец домена shop - `services/shop_srv`.
 - Для preview/download файлов в admin UI используйте защищенный `GET /v1/files/:uuid`.
   Не делайте этот endpoint публичным ради картинок и не добавляйте `deviceId`
   или другие auth-данные в query string.

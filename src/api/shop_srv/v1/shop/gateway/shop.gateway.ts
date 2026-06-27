@@ -11,10 +11,10 @@ import { ShopEntity, ShopResultEntity } from '../shop.entity';
 
 @Injectable()
 export class ShopGateway {
-  constructor(@Inject('PRODUCT_COMMAND_SERVICE') private readonly productProxy: ClientProxy) {}
+  constructor(@Inject('SHOP_COMMAND_SERVICE') private readonly shopProxy: ClientProxy) {}
 
   async findAll() {
-    const message = this.productProxy.send({ cmd: 'shop.getAll' }, {});
+    const message = this.shopProxy.send({ cmd: 'shop.getAll' }, {});
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(ShopResultEntity, result);
@@ -25,7 +25,7 @@ export class ShopGateway {
   }
 
   async findByUuid(uuid: string) {
-    const message = this.productProxy.send({ cmd: 'shop.getByUuid' }, { uuid });
+    const message = this.shopProxy.send({ cmd: 'shop.getByUuid' }, { uuid });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(ShopEntity, result);
@@ -36,7 +36,7 @@ export class ShopGateway {
   }
 
   async create(dto: CreateDto) {
-    const message = this.productProxy.send({ cmd: 'shop.create' }, dto);
+    const message = this.shopProxy.send({ cmd: 'shop.create' }, dto);
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(ShopEntity, result);
@@ -47,7 +47,7 @@ export class ShopGateway {
   }
 
   async update(dto: UpdateDto) {
-    const message = this.productProxy.send({ cmd: 'shop.update' }, dto);
+    const message = this.shopProxy.send({ cmd: 'shop.update' }, dto);
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(ShopEntity, result);

@@ -1,7 +1,7 @@
 import { Type, Expose } from 'class-transformer';
 import { IsUUID, IsBoolean, ValidateNested, IsNumber, IsDateString } from 'class-validator';
 
-import { ShopEntity } from '../shop/shop.entity';
+import { ShopEntity } from '@/api/shop_srv/v1/shop/shop.entity';
 import { PriceEntity } from '../price/price.entity';
 import { VariantEntity } from '../variant/variant.entity';
 

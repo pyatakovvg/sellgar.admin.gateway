@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
-import { ShopModule } from './shop/shop.module';
 import { UnitModule } from './unit/unit.module';
 import { BrandModule } from './brand/brand.module';
 import { CategoryModule } from './category/category.module';
@@ -17,7 +16,6 @@ import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
-    ShopModule,
     ProductModule,
     VariantModule,
     PriceModule,
