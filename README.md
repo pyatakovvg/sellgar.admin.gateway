@@ -53,6 +53,8 @@ yarn install
 
 Репозиторий использует Yarn 3.6.1 и `nodeLinker: node-modules`.
 
+Требуемая версия Node.js: 24+.
+
 ## Локальный запуск
 
 Подготовить env:
@@ -61,7 +63,7 @@ yarn install
 cp gateways/admin/.env.example gateways/admin/.env
 ```
 
-Проверить, что в `.env` есть адреса RabbitMQ и downstream services. Сейчас код также использует `API_FILE_SRV`, `AMQP_ADMIN_SRV_EVENT_QUEUE` и `AMQP_EVENTS_EXCHANGE`; env contract требует отдельного исправления, потому что эти ключи не синхронизированы с `.env.example`.
+Проверить, что в `.env` есть адреса RabbitMQ и downstream services. Приложение валидирует обязательные env keys при старте и завершится с явной ошибкой, если ключ отсутствует или числовой ключ задан не числом.
 
 Запуск:
 

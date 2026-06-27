@@ -13,6 +13,7 @@ import { FingerprintService } from '@/common/services/fingerprint/fingerprint.se
 import { TokenModule } from '@/api/identity_srv/token/token.module';
 import { SessionModule } from '@/api/identity_srv/session/session.module';
 import { ApiProductV2Module } from '@/api/product_srv/v2/api.module';
+import { validateEnv } from '@/config/env.validation';
 
 import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
 
@@ -37,6 +38,7 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
       envFilePath: './.env',
       cache: true,
       isGlobal: true,
+      validate: validateEnv,
     }),
   ],
   controllers: [],

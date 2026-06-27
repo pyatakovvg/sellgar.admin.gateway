@@ -10,15 +10,20 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const logger = new Logger();
-  const config = new ConfigService();
 
   const app = await NestFactory.create(AppModule);
+  const config = app.get(ConfigService);
+  const origins = config
+    .getOrThrow<string>('ORIGINS')
+    .split(';')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.use(cookieParser());
 
   app.enableCors({
     credentials: true,
-    origin: config.get<string>('ORIGINS').split(';') as string[],
+    origin: origins,
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -30,16 +35,24 @@ async function bootstrap() {
       wildcards: true,
       persistent: true,
       prefetchCount: 1,
-      queue: config.get('AMQP_ADMIN_SRV_EVENT_QUEUE'),
+      urls: [
+        {
+          port: config.getOrThrow<number>('AMQP_PORT'),
+          hostname: config.getOrThrow<string>('AMQP_HOSTNAME'),
+          username: config.getOrThrow<string>('AMQP_USERNAME'),
+          password: config.getOrThrow<string>('AMQP_PASSWORD'),
+        },
+      ],
+      queue: config.getOrThrow<string>('AMQP_ADMIN_GATEWAY_PRODUCT_SRV_EVENT_QUEUE'),
       queueOptions: {
         durable: true,
       },
-      exchange: config.get('AMQP_EVENTS_EXCHANGE'),
+      exchange: config.getOrThrow<string>('AMQP_PRODUCT_SRV_EXCHANGE'),
       exchangeType: 'topic',
     },
   });
 
-  const port: number = config.get<number>('PORT');
+  const port = config.getOrThrow<number>('PORT');
 
   await app.startAllMicroservices();
   await app.listen(port, () => {

@@ -176,26 +176,26 @@ Gateway должен владеть только transport cookie:
 
 ### P0 - зафиксировать runtime config contract
 
-1. `gateways/admin/src/main.ts` создает `new ConfigService()` до Nest DI container. При этом `ConfigModule.forRoot({ envFilePath: './.env' })` подключен внутри `AppModule`. Это делает чтение `.env` в bootstrap неочевидным и зависит от текущей рабочей директории запуска.
+Статус: частично выполнено. `main.ts` теперь получает `ConfigService` через DI, `ConfigModule.forRoot()` использует `validateEnv`, `.env.example` дополнен HTTP адресами downstream services, а product event listener использует product event queue/exchange keys.
 
-   Решение: после `NestFactory.create(AppModule)` получать config через `app.get(ConfigService)`. Параллельно добавить env validation, чтобы приложение падало на старте с понятной ошибкой, а не стартовало с `undefined` queue/exchange.
+1. `gateways/admin/src/main.ts` больше не создает `new ConfigService()` до Nest DI container. При этом `ConfigModule.forRoot({ envFilePath: './.env' })` все еще зависит от текущей рабочей директории запуска, пока пакет не схлопнут в корень.
 
-2. `main.ts` читает `AMQP_ADMIN_SRV_EVENT_QUEUE` и `AMQP_EVENTS_EXCHANGE`, но `gateways/admin/.env.example` содержит другие ключи:
+   Решение: выполнено для DI и validation. При схлопывании структуры пересмотреть путь `.env`.
+
+2. `main.ts` больше не читает неописанные `AMQP_ADMIN_SRV_EVENT_QUEUE` и `AMQP_EVENTS_EXCHANGE`. Product event listener использует ключи, описанные в `.env.example`:
 
    - `AMQP_ADMIN_GATEWAY_PRODUCT_SRV_EVENT_QUEUE`
-   - `AMQP_ADMIN_GATEWAY_IDENTITY_SRV_EVENT_QUEUE`
    - `AMQP_PRODUCT_SRV_EXCHANGE`
-   - `AMQP_IDENTITY_SRV_EXCHANGE`
 
-   Решение: выбрать одну модель событий. Если gateway слушает только product events, bootstrap должен читать product event queue/exchange. Если gateway слушает общий events exchange, `.env.example` должен явно описывать общий queue/exchange.
+   Решение: выполнено для текущего единственного event consumer `product.updated`.
 
-3. `API_FILE_SRV` используется в file gateway, но отсутствует в `.env.example`.
+3. `API_FILE_SRV` и `API_PRODUCT_SRV` используются gateway кодом и описаны в `.env.example`.
 
-   Решение: добавить в env contract. Без этого новый разработчик не сможет поднять file flow из документации.
+   Решение: выполнено.
 
-4. `ORIGINS` читается как обязательная строка и сразу вызывает `.split(';')`. При пустом env приложение упадет невалидной JS ошибкой.
+4. `ORIGINS` валидируется как обязательная непустая строка и нормализуется в bootstrap.
 
-   Решение: env validation + typed config helper.
+   Решение: выполнено через `validateEnv`.
 
 ### P0 - закрыть security debt в auth/session
 
@@ -325,7 +325,7 @@ src/
 
 2. Написать нормальный `README.md` и зафиксировать, где теперь лежит dev infra - выполнено.
 
-3. Исправить config/bootstrap:
+3. Исправить config/bootstrap - выполнено:
    - `app.get(ConfigService)` вместо `new ConfigService()`;
    - env validation;
    - синхронизировать `.env.example` с реально читаемыми keys.
