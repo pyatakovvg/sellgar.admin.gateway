@@ -137,11 +137,13 @@ Gateway должен владеть только transport cookie:
 
 ### P0 - убрать ложные сигналы о владении и CI
 
-1. `.gitlab-ci.yml` сейчас вреден.
+Статус: выполнено. Из repo удалены `.gitlab-ci.yml`, `docker-compose.yaml`, `docker-compose-minio.yaml` и `rabbit.sh`. Вместо GitLab CI добавлен GitHub Actions workflow `.github/workflows/ci.yml`.
+
+1. `.gitlab-ci.yml` был вреден.
 
    Файл описывает GitLab pipeline для `services/company_srv/**/*`, которого в этом репозитории нет. Репозиторий живет в GitHub, поэтому файл не просто бесполезен: он создает ложное ожидание, что CI уже есть и что пакет связан с `company_srv`.
 
-   Решение: удалить `.gitlab-ci.yml`. Если нужен CI, добавить `.github/workflows/ci.yml` с реальными командами:
+   Решение: удален. CI перенесен в `.github/workflows/ci.yml` с реальными командами:
 
    ```bash
    yarn install --immutable
@@ -154,23 +156,23 @@ Gateway должен владеть только transport cookie:
    yarn build
    ```
 
-2. `docker-compose.yaml` не должен оставаться в текущем виде.
+2. `docker-compose.yaml` не должен был оставаться в прежнем виде.
 
    В нем закомментированы RabbitMQ/Postgres, а реально активен только `monorepo_minio`. MinIO не является зависимостью admin gateway напрямую: gateway ходит в `file.service` по HTTP, а уже `file.service` владеет MinIO, object keys, metadata и lifecycle.
 
-   Решение: удалить из admin gateway или вынести в workspace-level dev infra. Если нужен compose именно для gateway, он должен описывать только зависимости, нужные для локального запуска gateway, и не называться `monorepo_*`.
+   Решение: удален из admin gateway. Если нужен compose именно для gateway, он должен описывать только зависимости, нужные для локального запуска gateway, и не называться `monorepo_*`.
 
-3. `docker-compose-minio.yaml` дублирует MinIO и тоже не принадлежит admin gateway.
+3. `docker-compose-minio.yaml` дублировал MinIO и тоже не принадлежал admin gateway.
 
    MinIO compose должен жить в `sellgar.file.service` или в общей dev-инфре workspace. Два MinIO compose файла с разными credentials (`admin/admin` и `minioadmin/minioadmin`) будут создавать расхождение окружений.
 
-   Решение: удалить из этого репозитория после переноса нужной dev-инфры в правильное место.
+   Решение: удален из этого репозитория. Нужную dev-инфру переносить в `sellgar.file.service` или workspace-level dev infra.
 
 4. `rabbit.sh` не должен быть частью пакета.
 
    Это OS-level install script: `sudo`, apt repositories, systemctl, включение plugin. Такой скрипт не является ни build dependency, ни runtime contract admin gateway. Если RabbitMQ уже запускается локально или через Docker, этот файл опасен тем, что следующий разработчик может начать чинить пакет через изменение ОС.
 
-   Решение: удалить. Документировать RabbitMQ как внешнюю dev dependency в README/workspace docs. Для воспроизводимой локальной среды использовать compose на уровне workspace, а не shell install script внутри gateway.
+   Решение: удален. RabbitMQ документируется как внешняя dev dependency в README/workspace docs. Для воспроизводимой локальной среды использовать compose на уровне workspace, а не shell install script внутри gateway.
 
 ### P0 - зафиксировать runtime config contract
 
@@ -315,13 +317,13 @@ src/
 
 ## Рекомендуемый порядок работ
 
-1. Удалить/перенести чужую инфраструктуру:
+1. Удалить/перенести чужую инфраструктуру - выполнено:
    - `.gitlab-ci.yml`;
    - `docker-compose.yaml`;
    - `docker-compose-minio.yaml`;
    - `rabbit.sh`.
 
-2. Написать нормальный `README.md` и зафиксировать, где теперь лежит dev infra.
+2. Написать нормальный `README.md` и зафиксировать, где теперь лежит dev infra - выполнено.
 
 3. Исправить config/bootstrap:
    - `app.get(ConfigService)` вместо `new ConfigService()`;
