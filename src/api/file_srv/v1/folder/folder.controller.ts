@@ -1,6 +1,8 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
 
 import { FoldersService } from './folders.service';
+import { CreateFolderDto } from './dto/create-folder.dto';
+import { UpdateFolderDto } from './dto/update-folder.dto';
 
 @Controller('v1/folders')
 export class FolderController {
@@ -14,5 +16,20 @@ export class FolderController {
   @Get()
   findAll(@Query('parentUuid') parentUuid: string) {
     return this.folderService.findAll(parentUuid);
+  }
+
+  @Post()
+  create(@Body() dto: CreateFolderDto) {
+    return this.folderService.create(dto);
+  }
+
+  @Patch(':uuid')
+  update(@Param('uuid') uuid: string, @Body() dto: UpdateFolderDto) {
+    return this.folderService.update(uuid, dto);
+  }
+
+  @Delete(':uuid')
+  remove(@Param('uuid') uuid: string) {
+    return this.folderService.remove(uuid);
   }
 }

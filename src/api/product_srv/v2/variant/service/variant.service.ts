@@ -9,6 +9,7 @@ import { VariantGateway } from '../gateway/variant.gateway';
 
 import { UpdateProductDto } from '../gateway/dto/update-product.dto';
 import { CreateProductDto } from '../gateway/dto/create-product.dto';
+import { AddVariantImageDto } from './dto/add-variant-image.dto';
 
 @Injectable()
 export class VariantService {
@@ -35,5 +36,13 @@ export class VariantService {
 
   create(dto: CreateProductDto) {
     return this.productGateway.create(dto);
+  }
+
+  addImage(variantUuid: string, dto: AddVariantImageDto) {
+    return this.productGateway.addImage({ ...dto, variantUuid });
+  }
+
+  removeImage(variantUuid: string, imageUuid: string) {
+    return this.productGateway.removeImage(variantUuid, imageUuid);
   }
 }

@@ -27,8 +27,8 @@ export class CurrencyGateway {
     return resultInstance;
   }
 
-  async findByUuid(uuid: string) {
-    const message = this.productService.send({ cmd: 'currency.findByUuid' }, { uuid });
+  async findByUuid(code: string) {
+    const message = this.productService.send({ cmd: 'currency.findByUuid' }, { code });
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(CurrencyEntity, result, {
       strategy: 'excludeAll',
@@ -64,7 +64,7 @@ export class CurrencyGateway {
   }
 
   async remove(code: string) {
-    const message = this.productService.send({ cmd: 'currency.remove' }, { code });
+    const message = this.productService.send({ cmd: 'currency.delete' }, { code });
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(CurrencyEntity, result, {
       strategy: 'excludeAll',

@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { ValidateNested, IsUUID, IsString, IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 
 class Property {
   @IsUUID()
@@ -13,10 +13,37 @@ class Property {
   value: string;
 }
 
+class ProductVariantImage {
+  @IsUUID()
+  @IsOptional()
+  uuid?: string;
+
+  @IsString()
+  @IsOptional()
+  localId?: string;
+
+  @IsUUID()
+  @IsOptional()
+  imageUuid?: string;
+
+  @IsString()
+  @IsOptional()
+  fileName?: string;
+
+  @IsString()
+  @IsOptional()
+  alt?: string | null;
+}
+
 class ProductVariant {
   @IsUUID()
   @IsOptional()
   uuid?: string;
+
+  @ValidateNested({ each: true })
+  @Type(() => ProductVariantImage)
+  @IsOptional()
+  images?: ProductVariantImage[];
 
   @IsString()
   name: string;

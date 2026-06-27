@@ -1,8 +1,18 @@
 import { Type, Expose } from 'class-transformer';
-import { IsUUID, IsString, IsOptional, ValidateNested, IsNumber, IsDateString } from 'class-validator';
+import { IsUUID, IsString, IsOptional, ValidateNested, IsNumber, IsDateString, IsBoolean } from 'class-validator';
 
 import { ProductEntity } from '../product/product.entity';
 import { PropertyEntity } from '../property/property.entity';
+
+export class ImageEntity {
+  @Expose()
+  @IsUUID()
+  uuid: string;
+
+  @Expose()
+  @IsString()
+  fileName: string;
+}
 
 export class VariantPropertyEntity {
   @Expose()
@@ -21,6 +31,34 @@ export class VariantPropertyEntity {
   @Expose()
   @IsString()
   value: string;
+}
+
+export class VariantImageEntity {
+  @Expose()
+  @IsUUID()
+  uuid: string;
+
+  @Expose()
+  @IsUUID()
+  imageUuid: string;
+
+  @Expose()
+  @ValidateNested()
+  @Type(() => ImageEntity)
+  image: ImageEntity;
+
+  @Expose()
+  @IsNumber()
+  sortOrder: number;
+
+  @Expose()
+  @IsBoolean()
+  isPrimary: boolean;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  alt?: string | null;
 }
 
 export class VariantEntity {
@@ -46,6 +84,12 @@ export class VariantEntity {
   @ValidateNested()
   @Type(() => VariantPropertyEntity)
   properties: VariantPropertyEntity[];
+
+  @Expose()
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => VariantImageEntity)
+  images: VariantImageEntity[];
 
   @Expose()
   @IsDateString()

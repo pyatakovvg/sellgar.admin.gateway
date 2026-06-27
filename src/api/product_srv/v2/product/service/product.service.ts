@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductDto } from './dto/create-product.dto';
+import { ProductUploadFileDto } from './dto/product-upload-file.dto';
 
 import { ProductGateway } from '../gateway/product.gateway';
 
@@ -17,11 +18,12 @@ export class ProductService {
     return await this.productGateway.findByUuid(uuid);
   }
 
-  async update(dto: UpdateProductDto) {
-    return await this.productGateway.update(dto);
+  async update(dto: UpdateProductDto, files: ProductUploadFileDto[] = []) {
+    return await this.productGateway.update(dto, files);
   }
 
-  async create(dto: CreateProductDto) {
-    return await this.productGateway.create(dto);
+  async create(dto: CreateProductDto, files: ProductUploadFileDto[] = []) {
+    return await this.productGateway.create(dto, files);
   }
+
 }

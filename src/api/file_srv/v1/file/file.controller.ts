@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Post, Req, Res, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
-import { PassThrough } from 'stream';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 
 import { GetFileQueryDto } from './dto/get-file-query.dto';
+import { FileUploadDto } from './dto/file-upload.dto';
 
 import { FileService } from './file.service';
 
@@ -16,20 +17,20 @@ export class FileController {
     return this.fileService.getAll(folderUuid);
   }
 
-  @Post('upload')
-  async upload(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
-    const tunnel = new PassThrough();
-
-    req.pipe(tunnel);
-
-    res.status(200);
-
-    return this.fileService.upload(tunnel, req.headers);
+  @Post()
+  @UseInterceptors(FilesInterceptor('files'))
+  async upload(@UploadedFiles() files: FileUploadDto[], @Body('folderUuid') folderUuid?: string) {
+    return this.fileService.upload(files, folderUuid);
   }
 
-  @Get(':file')
-  async getByName(@Param('file') fileName: string, @Query() query: GetFileQueryDto, @Res() res: Response) {
-    const stream = await this.fileService.getByName(fileName, query);
+  @Delete(':uuid')
+  deleteByUuid(@Param('uuid') uuid: string) {
+    return this.fileService.deleteByUuid(uuid);
+  }
+
+  @Get(':uuid')
+  async getByUuid(@Param('uuid') uuid: string, @Query() query: GetFileQueryDto, @Res() res: Response) {
+    const stream = await this.fileService.getByUuid(uuid, query);
 
     res.header('Accept', 'image/webp');
     res.header('Content-Type', 'binary/octet-stream');

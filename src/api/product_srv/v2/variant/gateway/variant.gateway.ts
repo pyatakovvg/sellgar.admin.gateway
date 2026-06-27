@@ -9,8 +9,9 @@ import { plainToInstance } from 'class-transformer';
 
 import { UpdateProductDto } from './dto/update-product.dto';
 import { CreateProductDto } from './dto/create-product.dto';
+import { AddVariantImageDto } from './dto/add-variant-image.dto';
 
-import { ProductVariantResultEntity } from '../variant.entity';
+import { ProductVariantResultEntity, VariantEntity } from '../variant.entity';
 
 @Injectable()
 export class VariantGateway {
@@ -31,11 +32,16 @@ export class VariantGateway {
   }
 
   async findByUuid(uuid: string) {
-    const request = this.httpService
-      .get(this.config.get('API_PRODUCT_SRV') + '/variants/' + uuid)
-      .pipe(map((res) => res.data));
+    const message = this.productProxy.send({ cmd: 'product.variant.getByUuid' }, { uuid });
 
-    return firstValueFrom(request);
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(VariantEntity, result, {
+      strategy: 'excludeAll',
+    });
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
   }
 
   async update(uuid: string, dto: UpdateProductDto) {
@@ -52,5 +58,31 @@ export class VariantGateway {
       .pipe(map((res) => res.data));
 
     return firstValueFrom(request);
+  }
+
+  async addImage(dto: AddVariantImageDto) {
+    const message = this.productProxy.send({ cmd: 'product.variant.addImage' }, dto);
+
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(VariantEntity, result, {
+      strategy: 'excludeAll',
+    });
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
+  }
+
+  async removeImage(variantUuid: string, imageUuid: string) {
+    const message = this.productProxy.send({ cmd: 'product.variant.removeImage' }, { variantUuid, imageUuid });
+
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(VariantEntity, result, {
+      strategy: 'excludeAll',
+    });
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
   }
 }

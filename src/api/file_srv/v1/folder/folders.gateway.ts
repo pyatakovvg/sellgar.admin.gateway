@@ -4,6 +4,9 @@ import { ConfigService } from '@nestjs/config';
 
 import { map } from 'rxjs';
 
+import { CreateFolderDto } from './dto/create-folder.dto';
+import { UpdateFolderDto } from './dto/update-folder.dto';
+
 @Injectable()
 export class FoldersGateway {
   constructor(
@@ -21,5 +24,17 @@ export class FoldersGateway {
         params: { parentUuid },
       })
       .pipe(map((res) => res.data));
+  }
+
+  create(dto: CreateFolderDto) {
+    return this.httpService.post(this.config.get('API_FILE_SRV') + '/v1/folders', dto).pipe(map((res) => res.data));
+  }
+
+  update(uuid: string, dto: UpdateFolderDto) {
+    return this.httpService.patch(this.config.get('API_FILE_SRV') + '/v1/folders/' + uuid, dto).pipe(map((res) => res.data));
+  }
+
+  remove(uuid: string) {
+    return this.httpService.delete(this.config.get('API_FILE_SRV') + '/v1/folders/' + uuid).pipe(map((res) => res.data));
   }
 }

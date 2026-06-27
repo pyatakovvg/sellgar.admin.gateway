@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { Transport, MicroserviceOptions } from '@nestjs/microservices';
-import * as cookieParser from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 
 import { AllExceptionsFilter } from './common/exceptions/all-exception.filter';
 
@@ -13,17 +13,16 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   const config = app.get(ConfigService);
-  const origins = config
-    .getOrThrow<string>('ORIGINS')
-    .split(';')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
 
   app.use(cookieParser());
 
   app.enableCors({
     credentials: true,
-    origin: origins,
+    origin: config
+      .getOrThrow<string>('ORIGINS')
+      .split(';')
+      .map((origin) => origin.trim())
+      .filter(Boolean),
   });
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
@@ -32,9 +31,6 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      wildcards: true,
-      persistent: true,
-      prefetchCount: 1,
       urls: [
         {
           port: config.getOrThrow<number>('AMQP_PORT'),
@@ -43,11 +39,14 @@ async function bootstrap() {
           password: config.getOrThrow<string>('AMQP_PASSWORD'),
         },
       ],
-      queue: config.getOrThrow<string>('AMQP_ADMIN_GATEWAY_PRODUCT_SRV_EVENT_QUEUE'),
+      wildcards: true,
+      persistent: true,
+      prefetchCount: 1,
+      queue: config.getOrThrow<string>('AMQP_ADMIN_GATEWAY_IDENTITY_SRV_EVENT_QUEUE'),
       queueOptions: {
         durable: true,
       },
-      exchange: config.getOrThrow<string>('AMQP_PRODUCT_SRV_EXCHANGE'),
+      exchange: config.getOrThrow<string>('AMQP_IDENTITY_SRV_EXCHANGE'),
       exchangeType: 'topic',
     },
   });

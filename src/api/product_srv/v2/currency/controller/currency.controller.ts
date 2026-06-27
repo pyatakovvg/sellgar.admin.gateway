@@ -14,9 +14,9 @@ export class CurrencyController {
     return this.currencyService.findAll();
   }
 
-  @Get(':uuid')
-  findByUuid(@Param('uuid') uuid: string) {
-    return this.currencyService.findByUuid(uuid);
+  @Get(':code')
+  findByUuid(@Param('code') code: string) {
+    return this.currencyService.findByUuid(code);
   }
 
   @Patch(':code')

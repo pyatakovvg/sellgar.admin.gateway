@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigService, ConfigModule } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
-import { AuthModule } from './auth/auth.module';
-import { ProfileModule } from './profile/profile.module';
+import { AuthModule } from './api/auth/auth.module';
+import { ProfileModule } from './api/profile/profile.module';
 
 @Module({
   imports: [
