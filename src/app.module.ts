@@ -4,6 +4,7 @@ import { HttpModule } from '@nestjs/axios';
 
 import { ApiProductV2Module } from '@/api/product_srv/v2/api.module';
 import { ApiShopV1Module } from '@/api/shop_srv/v1/api.module';
+import { ApiStoreV1Module } from '@/api/store_srv/v1/api.module';
 import { ApiFileV1Module } from '@/api/file_srv/v1/api.module';
 
 import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
@@ -13,6 +14,7 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
     IdentitySrvModule,
     ApiProductV2Module,
     ApiShopV1Module,
+    ApiStoreV1Module,
     ApiFileV1Module,
 
     HttpModule.register({

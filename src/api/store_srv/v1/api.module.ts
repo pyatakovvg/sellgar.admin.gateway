@@ -2,31 +2,19 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
-import { UnitModule } from './unit/unit.module';
-import { BrandModule } from './brand/brand.module';
-import { CategoryModule } from './category/category.module';
-import { ProductModule } from './product/product.module';
-import { PropertyModule } from './property/property.module';
-import { VariantModule } from './variant/variant.module';
-import { PropertyGroupModule } from './property-group/property-group.module';
-import { NotificationModule } from './notification/notification.module';
+import { CurrencyModule } from './currency/currency.module';
+import { StoreProductModule } from './store-product/store-product.module';
 
 @Module({
   imports: [
-    ProductModule,
-    VariantModule,
-    PropertyGroupModule,
-    PropertyModule,
-    UnitModule,
-    BrandModule,
-    CategoryModule,
-    NotificationModule,
+    CurrencyModule,
+    StoreProductModule,
 
     ClientsModule.registerAsync({
       isGlobal: true,
       clients: [
         {
-          name: 'PRODUCT_COMMAND_SERVICE',
+          name: 'STORE_COMMAND_SERVICE',
           imports: [ConfigModule],
           inject: [ConfigService],
           useFactory: (config: ConfigService) => {
@@ -43,7 +31,7 @@ import { NotificationModule } from './notification/notification.module';
               options: {
                 persistent: true,
                 prefetchCount: 1,
-                queue: config.get('AMQP_PRODUCT_SRV_COMMAND_QUEUE'),
+                queue: config.get('AMQP_STORE_SRV_COMMAND_QUEUE'),
                 queueOptions: {
                   durable: true,
                 },
@@ -55,4 +43,4 @@ import { NotificationModule } from './notification/notification.module';
     }),
   ],
 })
-export class ApiProductV2Module {}
+export class ApiStoreV1Module {}
