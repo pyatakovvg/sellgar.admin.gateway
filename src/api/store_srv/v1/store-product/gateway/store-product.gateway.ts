@@ -5,10 +5,13 @@ import { plainToInstance } from 'class-transformer';
 import { firstValueFrom } from 'rxjs';
 
 import { ArchiveStoreProductDto } from './dto/archive-store-product.dto';
+import { AdjustOfferInventoryDto } from './dto/adjust-offer-inventory.dto';
 import { CreateStoreProductDto } from './dto/create-store-product.dto';
+import { ReceiptOfferInventoryDto } from './dto/receipt-offer-inventory.dto';
 import { UpdateStoreProductDto } from './dto/update-store-product.dto';
+import { WriteOffOfferInventoryDto } from './dto/write-off-offer-inventory.dto';
 
-import { StoreProductEntity, StoreProductResultEntity } from '../store-product.entity';
+import { OfferInventoryEntity, StoreProductEntity, StoreProductResultEntity } from '../store-product.entity';
 
 @Injectable()
 export class StoreProductGateway {
@@ -63,6 +66,39 @@ export class StoreProductGateway {
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(StoreProductEntity, result);
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
+  }
+
+  async receiptInventory(dto: ReceiptOfferInventoryDto) {
+    const message = this.storeProxy.send({ cmd: 'store.inventory.receipt' }, dto);
+
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(OfferInventoryEntity, result);
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
+  }
+
+  async writeOffInventory(dto: WriteOffOfferInventoryDto) {
+    const message = this.storeProxy.send({ cmd: 'store.inventory.writeOff' }, dto);
+
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(OfferInventoryEntity, result);
+
+    await validateOrReject(resultInstance);
+
+    return resultInstance;
+  }
+
+  async adjustInventory(dto: AdjustOfferInventoryDto) {
+    const message = this.storeProxy.send({ cmd: 'store.inventory.adjust' }, dto);
+
+    const result = await firstValueFrom(message);
+    const resultInstance = plainToInstance(OfferInventoryEntity, result);
 
     await validateOrReject(resultInstance);
 
