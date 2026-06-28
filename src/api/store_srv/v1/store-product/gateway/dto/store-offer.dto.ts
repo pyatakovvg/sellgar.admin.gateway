@@ -13,19 +13,7 @@ export class StoreOfferDto {
 
   @IsOptional()
   @IsString()
-  sku?: string | null;
-
-  @IsOptional()
-  @IsString()
   article?: string | null;
-
-  @IsOptional()
-  @IsString()
-  titleOverride?: string | null;
-
-  @IsOptional()
-  @IsString()
-  descriptionOverride?: string | null;
 
   @ValidateNested()
   @Type(() => PriceDto)
