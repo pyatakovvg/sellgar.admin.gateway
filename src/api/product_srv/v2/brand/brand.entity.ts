@@ -6,6 +6,10 @@ export class BrandEntity {
   @Expose()
   uuid: string;
 
+  @Expose()
+  @IsNumber()
+  version: number;
+
   @IsString()
   @Expose()
   code: string;

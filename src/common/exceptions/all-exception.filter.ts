@@ -1,9 +1,12 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus, Logger } from '@nestjs/common';
 
 type ExceptionResponse = {
+  status?: unknown;
+  statusCode?: unknown;
   message?: unknown;
   error?: unknown;
   code?: unknown;
+  response?: unknown;
 };
 
 @Catch()
@@ -15,10 +18,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status = exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const exceptionResponse =
-      exception instanceof HttpException ? exception.getResponse() : !!exception ? exception : 'Internal server error';
+    const exceptionResponse = this.toExceptionResponse(exception);
+    const status = this.toStatus(exception, exceptionResponse);
     const responsePayload = this.toResponsePayload(exceptionResponse);
     const responseCode = typeof responsePayload.code === 'string' ? responsePayload.code : undefined;
 
@@ -44,6 +45,43 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
   private toResponsePayload(response: unknown): ExceptionResponse {
     return response && typeof response === 'object' ? (response as ExceptionResponse) : {};
+  }
+
+  private toExceptionResponse(exception: unknown): unknown {
+    if (exception instanceof HttpException) {
+      return exception.getResponse();
+    }
+
+    const payload = this.toResponsePayload(exception);
+
+    if (payload.response) {
+      return payload.response;
+    }
+
+    return !!exception ? exception : 'Internal server error';
+  }
+
+  private toStatus(exception: unknown, response: unknown): number {
+    if (exception instanceof HttpException) {
+      return exception.getStatus();
+    }
+
+    const responseStatus = this.pickStatus(response);
+
+    if (responseStatus) {
+      return responseStatus;
+    }
+
+    const exceptionStatus = this.pickStatus(exception);
+
+    return exceptionStatus ?? HttpStatus.INTERNAL_SERVER_ERROR;
+  }
+
+  private pickStatus(value: unknown): number | undefined {
+    const payload = this.toResponsePayload(value);
+    const status = payload.statusCode ?? payload.status;
+
+    return typeof status === 'number' && status >= 400 && status <= 599 ? status : undefined;
   }
 
   private toMessage(exception: unknown, response: unknown, payload: ExceptionResponse): unknown {

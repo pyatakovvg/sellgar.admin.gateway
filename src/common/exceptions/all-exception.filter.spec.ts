@@ -33,6 +33,54 @@ describe('AllExceptionsFilter', () => {
     );
   });
 
+  it('keeps status code from rpc error payloads', () => {
+    const filter = new AllExceptionsFilter();
+    const response = createResponse();
+
+    filter.catch(
+      {
+        statusCode: 409,
+        message: 'Product was changed by another request',
+        error: 'Conflict',
+      },
+      createHost(response),
+    );
+
+    expect(response.status).toHaveBeenCalledWith(409);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 409,
+        message: 'Product was changed by another request',
+        error: 'Conflict',
+      }),
+    );
+  });
+
+  it('keeps status code from nested rpc error responses', () => {
+    const filter = new AllExceptionsFilter();
+    const response = createResponse();
+
+    filter.catch(
+      {
+        response: {
+          statusCode: 409,
+          message: 'Product was changed by another request',
+          error: 'Conflict',
+        },
+      },
+      createHost(response),
+    );
+
+    expect(response.status).toHaveBeenCalledWith(409);
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        statusCode: 409,
+        message: 'Product was changed by another request',
+        error: 'Conflict',
+      }),
+    );
+  });
+
   function createHost(response: ReturnType<typeof createResponse>) {
     return {
       switchToHttp: () => ({
