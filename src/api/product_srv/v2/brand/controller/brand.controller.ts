@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { plainToInstance } from 'class-transformer';
 
 import { BrandService } from '../service/brand.service';
 
 import { UpdateBrandDto } from '../service/dto/update-brand.dto';
 import { CreateBrandDto } from '../service/dto/create-brand.dto';
+import { ProductUploadFileDto } from '../../product/service/dto/product-upload-file.dto';
 
 @Controller('v2/brands')
 export class BrandController {
@@ -20,12 +23,37 @@ export class BrandController {
   }
 
   @Patch(':uuid')
-  update(@Param('uuid') uuid: string, @Body() updateCategoryDto: UpdateBrandDto) {
-    return this.brandService.update(uuid, updateCategoryDto);
+  @UseInterceptors(AnyFilesInterceptor())
+  update(
+    @Param('uuid') uuid: string,
+    @Body('payload') payload: string,
+    @Body() body: Record<string, unknown>,
+    @UploadedFiles() files: ProductUploadFileDto[],
+  ) {
+    return this.brandService.update(uuid, this.parsePayload(UpdateBrandDto, payload, body, { uuid }), files);
   }
 
   @Post()
-  create(@Body() createCategoryDto: CreateBrandDto) {
-    return this.brandService.create(createCategoryDto);
+  @UseInterceptors(AnyFilesInterceptor())
+  create(
+    @Body('payload') payload: string,
+    @Body() body: Record<string, unknown>,
+    @UploadedFiles() files: ProductUploadFileDto[],
+  ) {
+    return this.brandService.create(this.parsePayload(CreateBrandDto, payload, body), files);
+  }
+
+  private parsePayload<T extends object>(
+    ClassRef: new () => T,
+    payload: string | undefined,
+    body: Record<string, unknown>,
+    patch?: Partial<T>,
+  ): T {
+    const data = payload ? JSON.parse(payload) : body;
+
+    return plainToInstance(ClassRef, {
+      ...data,
+      ...patch,
+    });
   }
 }

@@ -1,9 +1,12 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { plainToInstance } from 'class-transformer';
 
 import { CategoryService } from '../service/category.service';
 
 import { UpdateCategoryDto } from '../service/dto/update-category.dto';
 import { CreateCategoryDto } from '../service/dto/create-category.dto';
+import { ProductUploadFileDto } from '../../product/service/dto/product-upload-file.dto';
 
 @Controller('v2/categories')
 export class CategoryController {
@@ -20,12 +23,37 @@ export class CategoryController {
   }
 
   @Patch(':uuid')
-  update(@Param('uuid') uuid: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryService.update(uuid, updateCategoryDto);
+  @UseInterceptors(AnyFilesInterceptor())
+  update(
+    @Param('uuid') uuid: string,
+    @Body('payload') payload: string,
+    @Body() body: Record<string, unknown>,
+    @UploadedFiles() files: ProductUploadFileDto[],
+  ) {
+    return this.categoryService.update(uuid, this.parsePayload(UpdateCategoryDto, payload, body, { uuid }), files);
   }
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
-    return this.categoryService.create(createCategoryDto);
+  @UseInterceptors(AnyFilesInterceptor())
+  create(
+    @Body('payload') payload: string,
+    @Body() body: Record<string, unknown>,
+    @UploadedFiles() files: ProductUploadFileDto[],
+  ) {
+    return this.categoryService.create(this.parsePayload(CreateCategoryDto, payload, body), files);
+  }
+
+  private parsePayload<T extends object>(
+    ClassRef: new () => T,
+    payload: string | undefined,
+    body: Record<string, unknown>,
+    patch?: Partial<T>,
+  ): T {
+    const data = payload ? JSON.parse(payload) : body;
+
+    return plainToInstance(ClassRef, {
+      ...data,
+      ...patch,
+    });
   }
 }

@@ -1,5 +1,39 @@
 import { Type, Expose } from 'class-transformer';
-import { IsOptional, IsString, IsUUID, ValidateNested, IsNumber, IsDateString } from 'class-validator';
+import { IsOptional, IsString, IsUUID, ValidateNested, IsNumber, IsDateString, IsBoolean } from 'class-validator';
+
+import { ImageEntity } from '../variant/variant.entity';
+
+export class CategoryImageEntity {
+  @Expose()
+  @IsUUID()
+  uuid: string;
+
+  @Expose()
+  @IsUUID()
+  categoryUuid: string;
+
+  @Expose()
+  @IsUUID()
+  imageUuid: string;
+
+  @Expose()
+  @IsNumber()
+  sortOrder: number;
+
+  @Expose()
+  @IsBoolean()
+  isPrimary: boolean;
+
+  @Expose()
+  @IsString()
+  @IsOptional()
+  alt?: string | null;
+
+  @Expose()
+  @ValidateNested()
+  @Type(() => ImageEntity)
+  image: ImageEntity;
+}
 
 export class CategoryEntity {
   @IsUUID()
@@ -26,6 +60,12 @@ export class CategoryEntity {
   @Expose()
   @IsString()
   description: string;
+
+  @Expose()
+  @ValidateNested()
+  @Type(() => CategoryImageEntity)
+  @IsOptional()
+  image?: CategoryImageEntity | null;
 
   @Expose()
   @IsOptional()
