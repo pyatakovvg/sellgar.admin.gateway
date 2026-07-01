@@ -84,6 +84,12 @@ export class SessionAuthGuard implements CanActivate {
     });
 
     if (!renewedSession) {
+      const verifiedSession = await this.verify(sessionSecret, sessionContext);
+
+      if (verifiedSession.data.status === 'active' && verifiedSession.data.userId) {
+        return verifiedSession;
+      }
+
       this.authCookieService.clear(response);
       throw new UnauthorizedException({
         code: 'renew_failed',

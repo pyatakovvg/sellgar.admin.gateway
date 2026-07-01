@@ -108,16 +108,47 @@ describe('SessionAuthGuard', () => {
   it('clears the cookie and rejects when renew fails', async () => {
     const response = {};
 
-    sessionService.verify.mockResolvedValue({
-      data: {
-        status: 'renew_required',
-      },
-      meta: {},
-    });
+    sessionService.verify
+      .mockResolvedValueOnce({
+        data: {
+          status: 'renew_required',
+        },
+        meta: {},
+      })
+      .mockResolvedValueOnce({
+        data: {
+          status: 'invalid',
+        },
+        meta: {},
+      });
     sessionService.renew.mockResolvedValue(null);
 
     await expect(guard.canActivate(createContext({}, response))).rejects.toBeInstanceOf(UnauthorizedException);
     expect(authCookieService.clear).toHaveBeenCalledWith(response);
+  });
+
+  it('accepts a session renewed by a parallel request when local renew loses the race', async () => {
+    const response = {};
+
+    sessionService.verify
+      .mockResolvedValueOnce({
+        data: {
+          status: 'renew_required',
+        },
+        meta: {},
+      })
+      .mockResolvedValueOnce({
+        data: {
+          status: 'active',
+          userId: '9ed7d1a4-91eb-402a-8028-1654aeb259f5',
+        },
+        meta: {},
+      });
+    sessionService.renew.mockResolvedValue(null);
+
+    await expect(guard.canActivate(createContext({}, response))).resolves.toBe(true);
+    expect(authCookieService.clear).not.toHaveBeenCalled();
+    expect(authCookieService.set).not.toHaveBeenCalled();
   });
 
   function createContext(request: Record<string, unknown> = {}, response: Record<string, unknown> = {}) {
