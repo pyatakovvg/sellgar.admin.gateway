@@ -111,12 +111,12 @@ export class ProductGateway {
     for (const variant of dto.variants) {
       const images = [];
 
-      for (const image of variant.images ?? []) {
+      for (const [order, image] of (variant.images ?? []).entries()) {
         if (image.imageUuid) {
           images.push({
             uuid: image.uuid,
             imageUuid: image.imageUuid,
-            order: image.order,
+            order,
             fileName: image.fileName,
             alt: image.alt ?? null,
           });
@@ -138,7 +138,7 @@ export class ProductGateway {
         uploadedFiles.push(uploadedFile);
         images.push({
           imageUuid: uploadedFile.uuid,
-          order: image.order,
+          order,
           fileName: uploadedFile.name,
           alt: image.alt ?? null,
         });
