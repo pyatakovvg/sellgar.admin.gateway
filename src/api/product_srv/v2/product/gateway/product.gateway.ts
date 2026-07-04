@@ -116,6 +116,7 @@ export class ProductGateway {
           images.push({
             uuid: image.uuid,
             imageUuid: image.imageUuid,
+            order: image.order,
             fileName: image.fileName,
             alt: image.alt ?? null,
           });
@@ -137,6 +138,7 @@ export class ProductGateway {
         uploadedFiles.push(uploadedFile);
         images.push({
           imageUuid: uploadedFile.uuid,
+          order: image.order,
           fileName: uploadedFile.name,
           alt: image.alt ?? null,
         });

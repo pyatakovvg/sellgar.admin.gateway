@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { IsNumber, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 
 export class ProductPropertyDto {
   @IsUUID()
@@ -25,6 +25,10 @@ class ProductVariantImage {
   @IsUUID()
   @IsOptional()
   imageUuid?: string;
+
+  @IsNumber()
+  @IsOptional()
+  order?: number;
 
   @IsString()
   @IsOptional()
