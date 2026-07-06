@@ -17,6 +17,11 @@ export class ProductPropertyEntity {
   propertyUuid: string;
 
   @Expose()
+  @IsUUID()
+  @IsOptional()
+  optionUuid: string | null;
+
+  @Expose()
   @ValidateNested()
   @Type(() => PropertyEntity)
   property: PropertyEntity;

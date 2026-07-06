@@ -1,12 +1,69 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsArray,
+  IsIn,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  ValidateNested,
+} from 'class-validator';
 
-export class CreatePropertyDto {
+export class PropertyOptionMetadataDto {
   @IsUUID()
-  groupUuid: string;
+  @IsOptional()
+  uuid?: string;
+
+  @IsIn(['TEXT', 'COLOR', 'IMAGE', 'ICON'])
+  valueType: 'TEXT' | 'COLOR' | 'IMAGE' | 'ICON';
+
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
+
+  @IsString()
+  @IsOptional()
+  textValue?: string | null;
+
+  @IsString()
+  @IsOptional()
+  colorValue?: string | null;
 
   @IsUUID()
   @IsOptional()
-  unitUuid: string | null;
+  fileUuid?: string | null;
+
+  @IsString()
+  @IsOptional()
+  iconCode?: string | null;
+}
+
+export class PropertyOptionDto {
+  @IsUUID()
+  @IsOptional()
+  uuid?: string;
+
+  @IsString()
+  code: string;
+
+  @IsString()
+  name: string;
+
+  @IsNumber()
+  @IsOptional()
+  sortOrder?: number;
+
+  @ValidateNested({ each: true })
+  @Type(() => PropertyOptionMetadataDto)
+  @IsArray()
+  @IsOptional()
+  metadata?: PropertyOptionMetadataDto[];
+}
+
+export class CreatePropertyDto {
+  @IsUUID()
+  @IsOptional()
+  unitUuid?: string | null;
 
   @IsString()
   code: string;
@@ -17,6 +74,13 @@ export class CreatePropertyDto {
   @IsString()
   description: string;
 
-  @IsString()
-  type: 'TEXT' | 'CHECKBOX' | 'RADIO' | 'DATE' | 'RANGE';
+  @IsIn(['TEXT', 'NUMBER', 'BOOLEAN', 'OPTION', 'DATE'])
+  type: 'TEXT' | 'NUMBER' | 'BOOLEAN' | 'OPTION' | 'DATE';
+
+  @ValidateNested({ each: true })
+  @Type(() => PropertyOptionDto)
+  @IsArray()
+  @IsOptional()
+  options?: PropertyOptionDto[];
+
 }

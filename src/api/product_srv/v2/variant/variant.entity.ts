@@ -25,6 +25,11 @@ export class VariantPropertyEntity {
   propertyUuid: string;
 
   @Expose()
+  @IsUUID()
+  @IsOptional()
+  optionUuid: string | null;
+
+  @Expose()
   @ValidateNested()
   @Type(() => PropertyEntity)
   property: PropertyEntity;
