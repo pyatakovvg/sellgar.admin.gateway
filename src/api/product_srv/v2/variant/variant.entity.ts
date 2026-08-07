@@ -37,6 +37,10 @@ export class VariantPropertyEntity {
   @Expose()
   @IsString()
   value: string;
+
+  @Expose()
+  @IsNumber()
+  order: number;
 }
 
 export class VariantImageEntity {

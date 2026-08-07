@@ -5,18 +5,10 @@ import { CatalogStatus } from '@/api/product_srv/v2/catalog-status.enum';
 import { VariantImageEntity, VariantPropertyEntity } from '@/api/product_srv/v2/variant/variant.entity';
 import { ShopStatus } from '@/api/shop_srv/v1/shop/shop-status.enum';
 
+import { CurrencyEntity } from '../currency/currency.entity';
+
 import { StoreOfferStatus } from './store-offer-status.enum';
 import { StoreProductStatus } from './store-product-status.enum';
-
-class CurrencyEntity {
-  @Expose()
-  @IsString()
-  code: string;
-
-  @Expose()
-  @IsString()
-  value: string;
-}
 
 class BrandEntity {
   @Expose()
