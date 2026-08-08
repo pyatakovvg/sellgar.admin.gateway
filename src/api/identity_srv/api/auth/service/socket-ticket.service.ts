@@ -30,7 +30,6 @@ export class SocketTicketService {
       {
         exp: expiresAt,
         iat: issuedAt,
-        rooms: [],
         sid: sessionId,
         sub: userId,
       },

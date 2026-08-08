@@ -27,10 +27,10 @@ describe(SocketTicketService.name, () => {
     expect(result.expiresAt).toEqual(expect.any(String));
     expect(payload).toEqual(
       expect.objectContaining({
-        rooms: [],
         sid: sessionId,
         sub: userId,
       }),
     );
+    expect(payload).not.toHaveProperty('rooms');
   });
 });
