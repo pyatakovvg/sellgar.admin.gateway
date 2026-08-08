@@ -60,6 +60,7 @@ describe('SessionAuthGuard', () => {
 
     sessionService.verify.mockResolvedValue({
       data: {
+        sessionId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
         status: 'active',
         userId: '9ed7d1a4-91eb-402a-8028-1654aeb259f5',
       },
@@ -75,6 +76,7 @@ describe('SessionAuthGuard', () => {
     });
     expect(request).toEqual({
       user: {
+        sessionId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
         uuid: '9ed7d1a4-91eb-402a-8028-1654aeb259f5',
       },
     });
@@ -139,6 +141,7 @@ describe('SessionAuthGuard', () => {
       })
       .mockResolvedValueOnce({
         data: {
+          sessionId: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
           status: 'active',
           userId: '9ed7d1a4-91eb-402a-8028-1654aeb259f5',
         },

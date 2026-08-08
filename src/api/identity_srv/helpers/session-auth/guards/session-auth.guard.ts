@@ -9,6 +9,7 @@ import { AuthSessionContext, AuthSessionContextService } from '../context/auth-s
 
 type AuthenticatedRequest = Request & {
   user?: {
+    sessionId?: string;
     uuid: string;
   };
 };
@@ -16,6 +17,7 @@ type AuthenticatedRequest = Request & {
 type VerifiedSession = {
   data: {
     status: string;
+    sessionId?: string;
     userId?: string;
   };
   meta: Record<string, never>;
@@ -59,6 +61,7 @@ export class SessionAuthGuard implements CanActivate {
     }
 
     request.user = {
+      sessionId: session.data.sessionId,
       uuid: session.data.userId,
     };
 
@@ -100,6 +103,7 @@ export class SessionAuthGuard implements CanActivate {
 
     return {
       data: {
+        sessionId: renewedSession.sessionId,
         status: 'active',
         userId: renewedSession.userId,
       },

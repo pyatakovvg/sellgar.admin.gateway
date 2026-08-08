@@ -19,13 +19,16 @@ describe('AuthController', () => {
   const authSessionContextService = {
     build: jest.fn(),
   };
+  const socketTicketService = {
+    issue: jest.fn(),
+  };
   const loggerWarn = jest.spyOn(Logger.prototype, 'warn').mockImplementation();
 
   let controller: AuthController;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    authSessionContextService.build.mockResolvedValue({
+    authSessionContextService.build.mockReturnValue({
       clientType: 'web',
       gateway: 'admin_gw',
       device: 'Chrome (GNU/Linux)',
@@ -36,11 +39,33 @@ describe('AuthController', () => {
       sessionService as never,
       authCookieService as never,
       authSessionContextService as never,
+      socketTicketService as never,
     );
   });
 
   afterAll(() => {
     loggerWarn.mockRestore();
+  });
+
+  it('issues a socket ticket for the identity attached by the session guard', async () => {
+    socketTicketService.issue.mockResolvedValue({
+      expiresAt: '2026-08-08T12:05:00.000Z',
+      ticket: 'signed-ticket',
+    });
+
+    await expect(
+      controller.issueSocketTicket(
+        '09edcfbd-b192-4fc9-a703-f5bf84a67386',
+        '3a4752e0-c56d-4d72-8976-28438f680fb8',
+      ),
+    ).resolves.toEqual({
+      expiresAt: '2026-08-08T12:05:00.000Z',
+      ticket: 'signed-ticket',
+    });
+    expect(socketTicketService.issue).toHaveBeenCalledWith(
+      '09edcfbd-b192-4fc9-a703-f5bf84a67386',
+      '3a4752e0-c56d-4d72-8976-28438f680fb8',
+    );
   });
 
   it('signs out without a cookie as an idempotent success', async () => {
@@ -59,7 +84,9 @@ describe('AuthController', () => {
   it('clears the cookie and succeeds even when revoke context cannot be built', async () => {
     const response = createResponse();
     authCookieService.read.mockReturnValue('session-secret');
-    authSessionContextService.build.mockRejectedValue(new Error('device_id_required'));
+    authSessionContextService.build.mockImplementationOnce(() => {
+      throw new Error('device_id_required');
+    });
 
     await controller.signOut({} as never, response as never);
 

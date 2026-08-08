@@ -10,6 +10,9 @@ import { Public } from '../../../helpers/session-auth/decorators/public.decorato
 
 import { AuthCookieService } from '../../../helpers/session-auth/cookie/auth-cookie.service';
 import { AuthSessionContextService } from '../../../helpers/session-auth/context/auth-session-context.service';
+import { AuthSessionId } from '../../../helpers/session-auth/decorators/auth-session-id.decorator';
+import { AuthUuid } from '../../../helpers/session-auth/decorators/auth-uuid.decorator';
+import { SocketTicketService } from '../service/socket-ticket.service';
 
 @Controller('v1/auth')
 export class AuthController {
@@ -20,7 +23,13 @@ export class AuthController {
     private readonly sessionService: SessionService,
     private readonly authCookieService: AuthCookieService,
     private readonly authSessionContextService: AuthSessionContextService,
+    private readonly socketTickets: SocketTicketService,
   ) {}
+
+  @Post('socket-ticket')
+  async issueSocketTicket(@AuthSessionId() sessionId: string, @AuthUuid() userId: string) {
+    return await this.socketTickets.issue(sessionId, userId);
+  }
 
   @Public()
   @Post('sign-in')
