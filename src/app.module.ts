@@ -6,6 +6,7 @@ import { ApiProductV2Module } from '@/api/product_srv/v2/api.module';
 import { ApiShopV1Module } from '@/api/shop_srv/v1/api.module';
 import { ApiStoreV1Module } from '@/api/store_srv/v1/api.module';
 import { ApiFileV1Module } from '@/api/file_srv/v1/api.module';
+import { RealtimeModule } from '@/api/realtime/realtime.module';
 
 import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
 
@@ -16,6 +17,7 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
     ApiShopV1Module,
     ApiStoreV1Module,
     ApiFileV1Module,
+    RealtimeModule,
 
     HttpModule.register({
       global: true,

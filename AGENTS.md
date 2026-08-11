@@ -6,7 +6,8 @@ cookie/session auth, CORS, guards и общий exception filter.
 
 ## Что здесь находится
 
-- `src/main.ts` - HTTP bootstrap, CORS из `ORIGINS`, global validation pipe, exception filter и RMQ event microservice.
+- `src/main.ts` - HTTP bootstrap, CORS из `ORIGINS`, global validation pipe,
+  exception filter и RMQ consumers identity/realtime events.
 - `src/app.module.ts` - композиция admin API, auth/session/token модулей, product v2 API и общих сервисов.
 - `src/api/identity_srv` - admin adapter к `services/identity_srv`; внутри
   `api/*` лежат внешние контракты, а `helpers/session-auth` содержит
@@ -15,6 +16,9 @@ cookie/session auth, CORS, guards и общий exception filter.
 - `src/api/shop_srv/v1` - admin HTTP-контракт магазинов; сейчас сохраняет публичный route `/v2/shops`, но ходит в `SHOP_COMMAND_SERVICE`.
 - `src/api/store_srv/v1` - admin HTTP-контракты продаваемых товаров, цен,
   валют и складских данных; не смешивать с `product_srv/v2`.
+- `src/api/realtime` - преобразование доменных events в единый
+  `realtime.delivery.requested.v1`; payload собирается через тот же admin
+  read-model composer, что использует HTTP.
 - `src/api/file_srv/v1` - admin-доступ к файловому сервису.
 - `src/common` - только общая инфраструктура gateway, сейчас exception filter.
 
@@ -37,6 +41,9 @@ cookie/session auth, CORS, guards и общий exception filter.
 - Не превращайте `src/common` или `helpers` в свалку feature-specific файлов:
   helper должен иметь понятного владельца и короткую структуру.
 - Не меняйте RMQ queues/exchange без проверки `.env` контракта и потребителей событий.
+- Не публикуйте domain events напрямую в Socket Gateway. Admin Gateway сохраняет
+  исходный `eventUuid`, нормализует payload в admin-facing Entity и публикует
+  только transport-neutral delivery request.
 
 ## Проверка
 

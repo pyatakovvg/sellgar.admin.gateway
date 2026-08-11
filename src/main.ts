@@ -51,6 +51,33 @@ async function bootstrap() {
     },
   });
 
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [
+        {
+          port: config.getOrThrow<number>('AMQP_PORT'),
+          hostname: config.getOrThrow<string>('AMQP_HOSTNAME'),
+          username: config.getOrThrow<string>('AMQP_USERNAME'),
+          password: config.getOrThrow<string>('AMQP_PASSWORD'),
+        },
+      ],
+      wildcards: true,
+      persistent: true,
+      noAck: false,
+      prefetchCount: 1,
+      queue: config.get<string>(
+        'AMQP_ADMIN_GATEWAY_REALTIME_EVENT_QUEUE',
+        'admin_gateway.realtime.event.queue',
+      ),
+      queueOptions: {
+        durable: true,
+      },
+      exchange: config.get<string>('AMQP_EVENTS_EXCHANGE', 'event.exchange'),
+      exchangeType: 'topic',
+    },
+  });
+
   const port = config.getOrThrow<number>('PORT');
 
   await app.startAllMicroservices();

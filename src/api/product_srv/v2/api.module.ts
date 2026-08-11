@@ -8,7 +8,6 @@ import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { PropertyModule } from './property/property.module';
 import { VariantModule } from './variant/variant.module';
-import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -18,8 +17,6 @@ import { NotificationModule } from './notification/notification.module';
     UnitModule,
     BrandModule,
     CategoryModule,
-    NotificationModule,
-
     ClientsModule.registerAsync({
       isGlobal: true,
       clients: [
