@@ -4,7 +4,6 @@ import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 
 import { ProductEntity } from '@/api/product_srv/v2/product/product.entity';
-import { StoreProductViewComposer } from '@/api/store_srv/v1/store-product/composer/store-product-view.composer';
 import { StoreProductEntity as RawStoreProductEntity } from '@/api/store_srv/v1/store-product/store-product.entity';
 
 import { ProductUpdatedEventDto } from '../dto/product-updated-event.dto';
@@ -20,7 +19,6 @@ export class RealtimeController {
 
   constructor(
     private readonly publisher: RealtimePublisherService,
-    private readonly storeProductComposer: StoreProductViewComposer,
   ) {}
 
   @EventPattern(PRODUCT_UPDATED_PATTERN)
@@ -54,15 +52,13 @@ export class RealtimeController {
       });
       await this.validateInput(rawStoreProduct);
 
-      const storeProduct = await this.storeProductComposer.compose(rawStoreProduct);
-
       await this.publisher.publish({
         eventUuid: event.eventUuid,
         eventType: event.eventType,
         schemaVersion: event.schemaVersion,
         occurredAt: event.occurredAt,
         channel: 'offers',
-        payload: this.storeProductComposer.toPlain(storeProduct),
+        payload: instanceToPlain(rawStoreProduct) as Record<string, unknown>,
       });
     });
   }

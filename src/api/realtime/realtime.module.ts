@@ -2,15 +2,12 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
-import { StoreProductModule } from '@/api/store_srv/v1/store-product/store-product.module';
-
 import { RealtimeController } from './controller/realtime.controller';
 import { REALTIME_EVENT_SERVICE } from './realtime.constants';
 import { RealtimePublisherService } from './service/realtime-publisher.service';
 
 @Module({
   imports: [
-    StoreProductModule,
     ClientsModule.registerAsync({
       clients: [
         {

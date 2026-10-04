@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 
-import { UnitService } from './service/unit.service';
-import { UnitController } from './controller/unit.controller';
+import { UnitService } from './application/unit.service';
+import { UnitController } from './presentation/unit.controller';
 
 @Module({
   controllers: [UnitController],
-  providers: [ConfigService, UnitService],
+  providers: [UnitService],
 })
 export class UnitModule {}

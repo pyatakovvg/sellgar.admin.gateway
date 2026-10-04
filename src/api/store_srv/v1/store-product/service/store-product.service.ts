@@ -8,60 +8,40 @@ import { ReceiptOfferInventoryDto } from '../gateway/dto/receipt-offer-inventory
 import { WriteOffOfferInventoryDto } from '../gateway/dto/write-off-offer-inventory.dto';
 
 import { StoreProductGateway } from '../gateway/store-product.gateway';
-import { StoreProductViewComposer } from '../composer/store-product-view.composer';
 
 @Injectable()
 export class StoreProductService {
-  constructor(
-    private readonly storeProductGateway: StoreProductGateway,
-    private readonly composer: StoreProductViewComposer,
-  ) {}
+  constructor(private readonly storeProductGateway: StoreProductGateway) {}
 
-  async findAll(query: any) {
-    const result = await this.storeProductGateway.findAll(query);
-
-    return this.composer.composeResult(result);
+  findAll(query: any) {
+    return this.storeProductGateway.findAll(query);
   }
 
-  async findByUuid(uuid: string) {
-    const result = await this.storeProductGateway.findByUuid(uuid);
-
-    return this.composer.compose(result);
+  findByUuid(uuid: string) {
+    return this.storeProductGateway.findByUuid(uuid);
   }
 
-  async create(dto: CreateStoreProductDto) {
-    const result = await this.storeProductGateway.create(dto);
-
-    return this.composer.compose(result);
+  create(dto: CreateStoreProductDto) {
+    return this.storeProductGateway.create(dto);
   }
 
-  async update(dto: UpdateStoreProductDto) {
-    const result = await this.storeProductGateway.update(dto);
-
-    return this.composer.compose(result);
+  update(dto: UpdateStoreProductDto) {
+    return this.storeProductGateway.update(dto);
   }
 
-  async archive(dto: ArchiveStoreProductDto) {
-    const result = await this.storeProductGateway.archive(dto);
-
-    return this.composer.compose(result);
+  archive(dto: ArchiveStoreProductDto) {
+    return this.storeProductGateway.archive(dto);
   }
 
-  async receiptInventory(dto: ReceiptOfferInventoryDto) {
-    const result = await this.storeProductGateway.receiptInventory(dto);
-
-    return this.composer.composeInventory(result);
+  receiptInventory(dto: ReceiptOfferInventoryDto) {
+    return this.storeProductGateway.receiptInventory(dto);
   }
 
-  async writeOffInventory(dto: WriteOffOfferInventoryDto) {
-    const result = await this.storeProductGateway.writeOffInventory(dto);
-
-    return this.composer.composeInventory(result);
+  writeOffInventory(dto: WriteOffOfferInventoryDto) {
+    return this.storeProductGateway.writeOffInventory(dto);
   }
 
-  async adjustInventory(dto: AdjustOfferInventoryDto) {
-    const result = await this.storeProductGateway.adjustInventory(dto);
-
-    return this.composer.composeInventory(result);
+  adjustInventory(dto: AdjustOfferInventoryDto) {
+    return this.storeProductGateway.adjustInventory(dto);
   }
 }

@@ -156,6 +156,10 @@ export class OfferInventoryEntity {
 
   @Expose()
   @IsNumber()
+  available: number;
+
+  @Expose()
+  @IsNumber()
   version: number;
 
   @Expose()

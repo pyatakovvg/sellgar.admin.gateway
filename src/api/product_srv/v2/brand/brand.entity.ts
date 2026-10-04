@@ -1,51 +1,23 @@
-import { Type, Expose } from 'class-transformer';
-import { IsUUID, IsString, ValidateNested, IsNumber, IsDateString, IsOptional, IsBoolean } from 'class-validator';
-
-import { ImageEntity } from '../variant/variant.entity';
+import { Expose, Type } from 'class-transformer';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 
 export class BrandImageEntity {
-  @Expose()
-  @IsUUID()
-  uuid: string;
-
-  @Expose()
-  @IsUUID()
-  brandUuid: string;
-
   @Expose()
   @IsUUID()
   imageUuid: string;
 
   @Expose()
-  @IsNumber()
-  sortOrder: number;
-
-  @Expose()
-  @IsBoolean()
-  isPrimary: boolean;
-
-  @Expose()
   @IsString()
-  @IsOptional()
-  alt?: string | null;
+  fileName: string;
 
   @Expose()
-  @ValidateNested()
-  @Type(() => ImageEntity)
-  image: ImageEntity;
+  @IsInt()
+  sortOrder: number;
 }
 
 export class BrandEntity {
-  @IsUUID()
   @Expose()
-  uuid: string;
-
-  @Expose()
-  @IsNumber()
-  version: number;
-
   @IsString()
-  @Expose()
   code: string;
 
   @Expose()
@@ -53,14 +25,19 @@ export class BrandEntity {
   name: string;
 
   @Expose()
+  @IsOptional()
   @IsString()
-  description: string;
+  description: string | null;
 
   @Expose()
-  @ValidateNested()
+  @IsInt()
+  version: number;
+
+  @Expose()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => BrandImageEntity)
-  @IsOptional()
-  image?: BrandImageEntity | null;
+  images: BrandImageEntity[];
 
   @Expose()
   @IsDateString()
@@ -71,20 +48,22 @@ export class BrandEntity {
   updatedAt: string;
 }
 
-class MetaEntity {
+export class BrandPageEntity {
   @Expose()
-  @IsNumber()
-  totalRows: number;
-}
-
-export class BrandResultEntity {
-  @Expose()
-  @ValidateNested()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => BrandEntity)
-  data: BrandEntity[];
+  items: BrandEntity[];
 
   @Expose()
-  @ValidateNested()
-  @Type(() => MetaEntity)
-  meta: MetaEntity;
+  @IsInt()
+  total: number;
+
+  @Expose()
+  @IsInt()
+  limit: number;
+
+  @Expose()
+  @IsInt()
+  offset: number;
 }

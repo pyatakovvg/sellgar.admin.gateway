@@ -1,17 +1,9 @@
-import { Type, Expose } from 'class-transformer';
-import { IsUUID, IsString, ValidateNested, IsNumber, IsDateString } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsArray, IsDateString, IsInt, IsString, ValidateNested } from 'class-validator';
 
 export class UnitEntity {
-  @IsUUID()
   @Expose()
-  uuid: string;
-
-  @Expose()
-  @IsNumber()
-  version: number;
-
   @IsString()
-  @Expose()
   code: string;
 
   @Expose()
@@ -20,7 +12,11 @@ export class UnitEntity {
 
   @Expose()
   @IsString()
-  description: string;
+  symbol: string;
+
+  @Expose()
+  @IsInt()
+  version: number;
 
   @Expose()
   @IsDateString()
@@ -31,20 +27,22 @@ export class UnitEntity {
   updatedAt: string;
 }
 
-class MetaEntity {
+export class UnitPageEntity {
   @Expose()
-  @IsNumber()
-  totalRows: number;
-}
-
-export class UnitResultEntity {
-  @Expose()
-  @ValidateNested()
+  @IsArray()
+  @ValidateNested({ each: true })
   @Type(() => UnitEntity)
-  data: UnitEntity[];
+  items: UnitEntity[];
 
   @Expose()
-  @ValidateNested()
-  @Type(() => MetaEntity)
-  meta: MetaEntity;
+  @IsInt()
+  total: number;
+
+  @Expose()
+  @IsInt()
+  limit: number;
+
+  @Expose()
+  @IsInt()
+  offset: number;
 }

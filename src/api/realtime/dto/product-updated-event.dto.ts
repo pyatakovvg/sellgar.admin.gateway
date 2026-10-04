@@ -18,7 +18,7 @@ export class ProductUpdatedEventDto {
   aggregateType: 'product';
 
   @IsUUID()
-  aggregateUuid: string;
+  aggregateId: string;
 
   @IsInt()
   @Min(1)
