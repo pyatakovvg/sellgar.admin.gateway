@@ -14,7 +14,7 @@ describe('ShopService', () => {
 
   it('передаёт серверные фильтры в getAll', async () => {
     const { client, service } = createSubject();
-    const query = { limit: 25, offset: 50 };
+    const query = { term: 'магазин', limit: 25, offset: 50 };
 
     await service.getAll(query);
 
@@ -30,5 +30,4 @@ describe('ShopService', () => {
 
     expect(client.request).toHaveBeenCalledWith(ShopServiceCommand.update, { uuid, ...dto }, ShopEntity);
   });
-
 });

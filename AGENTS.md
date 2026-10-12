@@ -28,6 +28,7 @@ cookie/session auth, CORS, guards и общий exception filter.
   переносите сюда владение сущностями identity/product.
 - При изменении auth/session/token сверяйте одноименные сервисы в `services/identity_srv`.
 - При изменении product/file endpoint сверяйте сервис-владелец и DTO на стороне `services/product_srv` или `services/file_srv`.
+- В ответе Product service имя изображения бренда находится в `images[].image.fileName`; admin Entity преобразует его в публичное `images[].fileName`.
 - `/v2/shops` является HTTP-контрактом admin gateway, но сервис-владелец домена shop - `services/shop_srv`.
 - Store routes должны ходить в `store_srv`, а catalog routes - в `product_srv`.
   Не возвращайте store/price/currency через product adapter после разделения

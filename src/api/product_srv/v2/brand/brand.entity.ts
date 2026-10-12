@@ -1,4 +1,4 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { IsArray, IsDateString, IsInt, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 
 export class BrandImageEntity {
@@ -7,6 +7,7 @@ export class BrandImageEntity {
   imageUuid: string;
 
   @Expose()
+  @Transform(({ value, obj }) => value ?? obj.image?.fileName, { toClassOnly: true })
   @IsString()
   fileName: string;
 
