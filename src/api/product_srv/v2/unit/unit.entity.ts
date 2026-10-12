@@ -1,5 +1,5 @@
 import { Expose, Type } from 'class-transformer';
-import { IsArray, IsDateString, IsInt, IsString, ValidateNested } from 'class-validator';
+import { IsArray, IsDateString, IsInt, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 export class UnitEntity {
   @Expose()
@@ -13,6 +13,11 @@ export class UnitEntity {
   @Expose()
   @IsString()
   symbol: string;
+
+  @Expose()
+  @IsOptional()
+  @IsString()
+  description: string | null;
 
   @Expose()
   @IsInt()

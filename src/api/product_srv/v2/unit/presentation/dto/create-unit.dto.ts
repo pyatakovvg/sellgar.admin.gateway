@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsString, MaxLength, MinLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
-const trim = ({ value }: { value: unknown }) => typeof value === 'string' ? value.trim() : value;
+const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
 export class CreateUnitDto {
   @Transform(trim)
@@ -21,4 +21,7 @@ export class CreateUnitDto {
   @MinLength(1)
   @MaxLength(256)
   symbol: string;
+  @IsOptional()
+  @IsString()
+  description?: string | null;
 }
