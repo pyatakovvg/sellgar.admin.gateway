@@ -4,20 +4,20 @@ import { validateOrReject } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { firstValueFrom } from 'rxjs';
 
-import { ArchiveStoreProductDto } from './dto/archive-store-product.dto';
-import { AdjustOfferInventoryDto } from './dto/adjust-offer-inventory.dto';
-import { CreateStoreProductDto } from './dto/create-store-product.dto';
-import { ReceiptOfferInventoryDto } from './dto/receipt-offer-inventory.dto';
-import { UpdateStoreProductDto } from './dto/update-store-product.dto';
-import { WriteOffOfferInventoryDto } from './dto/write-off-offer-inventory.dto';
+import { GetAllStoreProductsCommand } from '../service/command/get-all-store-products.command';
+import { ArchiveStoreProductCommand } from '../service/command/archive-store-product.command';
+import { AdjustRecordInventoryCommand } from '../service/command/adjust-record-inventory.command';
+import { InventoryMovementCommand } from '../service/command/inventory-movement.command';
+import { CreateStoreProductCommand } from '../service/command/create-store-product.command';
+import { UpdateStoreProductCommand } from '../service/command/update-store-product.command';
 
-import { OfferInventoryEntity, StoreProductEntity, StoreProductResultEntity } from '../store-product.entity';
+import { RecordInventoryEntity, StoreProductEntity, StoreProductResultEntity } from '../entity';
 
 @Injectable()
 export class StoreProductGateway {
   constructor(@Inject('STORE_COMMAND_SERVICE') private readonly storeProxy: ClientProxy) {}
 
-  async findAll(query: any) {
+  async getAll(query: GetAllStoreProductsCommand) {
     const message = this.storeProxy.send({ cmd: 'store.product.getAll' }, { query });
 
     const result = await firstValueFrom(message);
@@ -28,7 +28,7 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async findByUuid(uuid: string) {
+  async getByUuid(uuid: string) {
     const message = this.storeProxy.send({ cmd: 'store.product.getByUuid' }, { uuid });
 
     const result = await firstValueFrom(message);
@@ -39,7 +39,11 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async create(dto: CreateStoreProductDto) {
+  synchronizeCatalog(productUuid: string) {
+    return firstValueFrom(this.storeProxy.send({ cmd: 'store.catalog.synchronize' }, { productUuid }));
+  }
+
+  async create(dto: CreateStoreProductCommand) {
     const message = this.storeProxy.send({ cmd: 'store.product.create' }, dto);
 
     const result = await firstValueFrom(message);
@@ -50,7 +54,7 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async update(dto: UpdateStoreProductDto) {
+  async update(dto: UpdateStoreProductCommand) {
     const message = this.storeProxy.send({ cmd: 'store.product.update' }, dto);
 
     const result = await firstValueFrom(message);
@@ -61,7 +65,7 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async archive(dto: ArchiveStoreProductDto) {
+  async archive(dto: ArchiveStoreProductCommand) {
     const message = this.storeProxy.send({ cmd: 'store.product.archive' }, dto);
 
     const result = await firstValueFrom(message);
@@ -72,33 +76,33 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async receiptInventory(dto: ReceiptOfferInventoryDto) {
+  async receiptInventory(dto: InventoryMovementCommand) {
     const message = this.storeProxy.send({ cmd: 'store.inventory.receipt' }, dto);
 
     const result = await firstValueFrom(message);
-    const resultInstance = plainToInstance(OfferInventoryEntity, result);
+    const resultInstance = plainToInstance(RecordInventoryEntity, result);
 
     await validateOrReject(resultInstance);
 
     return resultInstance;
   }
 
-  async writeOffInventory(dto: WriteOffOfferInventoryDto) {
+  async writeOffInventory(dto: InventoryMovementCommand) {
     const message = this.storeProxy.send({ cmd: 'store.inventory.writeOff' }, dto);
 
     const result = await firstValueFrom(message);
-    const resultInstance = plainToInstance(OfferInventoryEntity, result);
+    const resultInstance = plainToInstance(RecordInventoryEntity, result);
 
     await validateOrReject(resultInstance);
 
     return resultInstance;
   }
 
-  async adjustInventory(dto: AdjustOfferInventoryDto) {
+  async adjustInventory(dto: AdjustRecordInventoryCommand) {
     const message = this.storeProxy.send({ cmd: 'store.inventory.adjust' }, dto);
 
     const result = await firstValueFrom(message);
-    const resultInstance = plainToInstance(OfferInventoryEntity, result);
+    const resultInstance = plainToInstance(RecordInventoryEntity, result);
 
     await validateOrReject(resultInstance);
 

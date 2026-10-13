@@ -1,11 +1,11 @@
+import { GetAllStoreProductsCommand } from './command/get-all-store-products.command';
+import { InventoryMovementCommand } from './command/inventory-movement.command';
+import { AdjustRecordInventoryCommand } from './command/adjust-record-inventory.command';
 import { Injectable } from '@nestjs/common';
 
-import { ArchiveStoreProductDto } from './dto/archive-store-product.dto';
-import { AdjustOfferInventoryDto } from '../gateway/dto/adjust-offer-inventory.dto';
-import { CreateStoreProductDto } from './dto/create-store-product.dto';
-import { UpdateStoreProductDto } from './dto/update-store-product.dto';
-import { ReceiptOfferInventoryDto } from '../gateway/dto/receipt-offer-inventory.dto';
-import { WriteOffOfferInventoryDto } from '../gateway/dto/write-off-offer-inventory.dto';
+import { ArchiveStoreProductCommand } from './command/archive-store-product.command';
+import { CreateStoreProductCommand } from './command/create-store-product.command';
+import { UpdateStoreProductCommand } from './command/update-store-product.command';
 
 import { StoreProductGateway } from '../gateway/store-product.gateway';
 
@@ -13,35 +13,39 @@ import { StoreProductGateway } from '../gateway/store-product.gateway';
 export class StoreProductService {
   constructor(private readonly storeProductGateway: StoreProductGateway) {}
 
-  findAll(query: any) {
-    return this.storeProductGateway.findAll(query);
+  getAll(query: GetAllStoreProductsCommand) {
+    return this.storeProductGateway.getAll(query);
   }
 
-  findByUuid(uuid: string) {
-    return this.storeProductGateway.findByUuid(uuid);
+  getByUuid(uuid: string) {
+    return this.storeProductGateway.getByUuid(uuid);
   }
 
-  create(dto: CreateStoreProductDto) {
+  synchronizeCatalog(productUuid: string) {
+    return this.storeProductGateway.synchronizeCatalog(productUuid);
+  }
+
+  create(dto: CreateStoreProductCommand) {
     return this.storeProductGateway.create(dto);
   }
 
-  update(dto: UpdateStoreProductDto) {
+  update(dto: UpdateStoreProductCommand) {
     return this.storeProductGateway.update(dto);
   }
 
-  archive(dto: ArchiveStoreProductDto) {
+  archive(dto: ArchiveStoreProductCommand) {
     return this.storeProductGateway.archive(dto);
   }
 
-  receiptInventory(dto: ReceiptOfferInventoryDto) {
+  receiptInventory(dto: InventoryMovementCommand) {
     return this.storeProductGateway.receiptInventory(dto);
   }
 
-  writeOffInventory(dto: WriteOffOfferInventoryDto) {
+  writeOffInventory(dto: InventoryMovementCommand) {
     return this.storeProductGateway.writeOffInventory(dto);
   }
 
-  adjustInventory(dto: AdjustOfferInventoryDto) {
+  adjustInventory(dto: AdjustRecordInventoryCommand) {
     return this.storeProductGateway.adjustInventory(dto);
   }
 }

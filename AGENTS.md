@@ -51,3 +51,17 @@ cookie/session auth, CORS, guards и общий exception filter.
 Основная проверка: `yarn workspace @gateway/admin run build`.
 
 Для auth/session unit-тестов: `yarn workspace @gateway/admin test --runInBand`.
+
+## Учетные записи Store
+
+Store API возвращает offers[].records[]: uuid, article, clarifications[]
+(position/value) и inventory (recordUuid, quantity, reserved, available, version).
+Артикул и остаток принадлежат учетной записи. У товара/связи варианта их нет.
+Каталог — product_srv_v2; нельзя обращаться к прежнему product API или
+возвращать старый offer_inventory контракт.
+
+Команды учета HTTP: POST /v2/store/products/records/:recordUuid/inventory/
+receipt, write-off, adjust. expectedVersion — версия record_inventory.
+PATCH /v2/store/products/:uuid изменяет метаданные/записи, но не остатки.
+POST /v2/store/products/catalog/:productUuid/synchronize делает один запрос
+актуального снимка каталога, без опросов.

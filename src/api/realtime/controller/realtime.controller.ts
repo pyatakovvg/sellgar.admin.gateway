@@ -4,7 +4,7 @@ import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 
 import { ProductEntity } from '@/api/product_srv/v2/product/product.entity';
-import { StoreProductEntity as RawStoreProductEntity } from '@/api/store_srv/v1/store-product/store-product.entity';
+import { StoreProductEntity as RawStoreProductEntity } from '@/api/store_srv/v1/store-product/entity';
 
 import { ProductUpdatedEventDto } from '../dto/product-updated-event.dto';
 import { StoreProductUpdatedEventDto } from '../dto/store-product-updated-event.dto';
@@ -17,9 +17,7 @@ class InvalidRealtimeEventError extends Error {}
 export class RealtimeController {
   private readonly logger = new Logger(RealtimeController.name);
 
-  constructor(
-    private readonly publisher: RealtimePublisherService,
-  ) {}
+  constructor(private readonly publisher: RealtimePublisherService) {}
 
   @EventPattern(PRODUCT_UPDATED_PATTERN)
   async productUpdated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
