@@ -1,5 +1,5 @@
 import { plainToInstance, Transform } from 'class-transformer';
-import { IsArray, IsEnum, IsOptional, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsEnum, IsOptional, IsString, IsUUID, MaxLength, ValidateNested } from 'class-validator';
 
 import { PaginationQueryDto } from '../../../shared/presentation/dto/pagination-query.dto';
 import { ProductStatus } from '../../product-status.enum';
@@ -18,6 +18,12 @@ function parseFilters(value: unknown): unknown {
 }
 
 export class GetAllProductsDto extends PaginationQueryDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(256)
+  @Transform(({ value }) => typeof value === 'string' ? value.trim() : value)
+  term?: string;
+
   @IsOptional()
   @IsEnum(ProductStatus)
   status?: ProductStatus;
