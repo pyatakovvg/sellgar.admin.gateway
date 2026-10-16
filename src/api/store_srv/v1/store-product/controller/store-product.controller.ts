@@ -20,8 +20,9 @@ export class StoreProductController {
   @Get(':uuid') getByUuid(
     @Param('uuid', new ParseUUIDPipe())
     uuid: string,
+    @Query() query: GetAllStoreProductsDto,
   ) {
-    return this.service.getByUuid(uuid);
+    return this.service.getByUuid(uuid, query);
   }
   @Post() create(
     @Body()

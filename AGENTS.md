@@ -65,3 +65,11 @@ receipt, write-off, adjust. expectedVersion — версия record_inventory.
 PATCH /v2/store/products/:uuid изменяет метаданные/записи, но не остатки.
 POST /v2/store/products/catalog/:productUuid/synchronize делает один запрос
 актуального снимка каталога, без опросов.
+
+## Плоские фильтры Store
+
+GET `/v2/store/products` и `/:uuid` принимают search, shopUuid, productUuid,
+productStatus, productShowing, variantStatus, variantShowing, quantityMin/Max,
+reservedMin/Max, availableMin/Max. HTTP DTO строго преобразует true/false и целые
+числа; проверяет статусы, границы и min <= max. Тот же query передается в Store.
+Текстовый search — только FTS по согласованным полям, без ILIKE/LIKE.

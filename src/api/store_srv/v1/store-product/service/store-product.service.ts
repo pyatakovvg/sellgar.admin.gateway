@@ -17,8 +17,8 @@ export class StoreProductService {
     return this.storeProductGateway.getAll(query);
   }
 
-  getByUuid(uuid: string) {
-    return this.storeProductGateway.getByUuid(uuid);
+  getByUuid(uuid: string, query: GetAllStoreProductsCommand = {}) {
+    return this.storeProductGateway.getByUuid(uuid, query);
   }
 
   synchronizeCatalog(productUuid: string) {

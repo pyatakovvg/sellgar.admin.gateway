@@ -28,8 +28,8 @@ export class StoreProductGateway {
     return resultInstance;
   }
 
-  async getByUuid(uuid: string) {
-    const message = this.storeProxy.send({ cmd: 'store.product.getByUuid' }, { uuid });
+  async getByUuid(uuid: string, query: GetAllStoreProductsCommand = {}) {
+    const message = this.storeProxy.send({ cmd: 'store.product.getByUuid' }, { uuid, query });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(StoreProductEntity, result);
