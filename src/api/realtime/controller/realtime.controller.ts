@@ -19,7 +19,7 @@ export class RealtimeController {
 
   constructor(private readonly publisher: RealtimePublisherService) {}
 
-  @EventPattern(PRODUCT_UPDATED_PATTERN)
+  @EventPattern<string>(PRODUCT_UPDATED_PATTERN)
   async productUpdated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
     await this.consume(context, async () => {
       const event = plainToInstance(ProductUpdatedEventDto, payload);
@@ -39,7 +39,7 @@ export class RealtimeController {
     });
   }
 
-  @EventPattern(STORE_PRODUCT_UPDATED_PATTERN)
+  @EventPattern<string>(STORE_PRODUCT_UPDATED_PATTERN)
   async storeProductUpdated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
     await this.consume(context, async () => {
       const event = plainToInstance(StoreProductUpdatedEventDto, payload);
