@@ -2,11 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
+import { CategoryModule } from './category/category.module';
 import { CurrencyModule } from './currency/currency.module';
 import { StoreProductModule } from './store-product/store-product.module';
 
 @Module({
   imports: [
+    CategoryModule,
     CurrencyModule,
     StoreProductModule,
 

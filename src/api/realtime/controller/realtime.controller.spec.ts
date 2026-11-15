@@ -60,6 +60,46 @@ describe(RealtimeController.name, () => {
     expect(channel.ack).toHaveBeenCalledWith(message);
   });
 
+  it.each(['categoryCreated', 'categoryUpdated'] as const)(
+    'normalizes %s into the categories stream',
+    async (method) => {
+      const publisher = { publish: jest.fn().mockResolvedValue(undefined) };
+      const { channel, context, message } = createRmqContext();
+      const controller = new RealtimeController(publisher as unknown as RealtimePublisherService);
+      const category = {
+        uuid: '5b7e713c-f6c6-4450-b1dc-767a7458bf55',
+        version: 2,
+        shopUuid: '1d932a09-5015-4688-a50e-03822fdeb37c',
+        parentUuid: null,
+        name: 'Чай',
+        description: null,
+        sortOrder: 0,
+        createdAt: '2026-08-08T12:00:00.000Z',
+        updatedAt: '2026-08-08T12:00:00.000Z',
+      };
+      const eventType = method === 'categoryCreated' ? 'store.category.created' : 'store.category.updated';
+      await controller[method](
+        {
+          eventUuid: '5a943eb6-4d4f-4c11-9962-08cf45e1697e',
+          eventType,
+          schemaVersion: 2,
+          producer: 'store_srv',
+          aggregateType: 'category',
+          aggregateUuid: category.uuid,
+          aggregateVersion: 2,
+          occurredAt: category.updatedAt,
+          payload: category,
+        },
+        context,
+      );
+      expect(publisher.publish).toHaveBeenCalledWith(
+        expect.objectContaining({ channel: 'categories', eventType, payload: category }),
+      );
+      expect(channel.ack).toHaveBeenCalledWith(message);
+      expect(channel.nack).not.toHaveBeenCalled();
+    },
+  );
+
   it('requeues a valid event when normalized delivery publishing fails', async () => {
     const publisher = { publish: jest.fn().mockRejectedValue(new Error('publish failed')) };
     const { channel, context, message } = createRmqContext();

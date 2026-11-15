@@ -66,6 +66,15 @@ PATCH /v2/store/products/:uuid изменяет метаданные/запис�
 POST /v2/store/products/catalog/:productUuid/synchronize делает один запрос
 актуального снимка каталога, без опросов.
 
+## Категории Store
+
+`GET /v2/store/categories/tree?shopUuid=<uuid>` передаёт `store.category.getTree`
+в Store и валидирует вложенный ответ `{ shopUuid, nodes }`. Категории принадлежат
+Store, не каталогу Product. `GET /v2/store/categories/:uuid` читает карточку;
+POST `/v2/store/categories` создаёт, PATCH `/:uuid` сохраняет поля и родителя
+атомарно. Body содержит commandId, name, description, parentUuid; для создания
+нужен shopUuid, для правки — expectedVersion. UUID правки берётся из path.
+
 ## Плоские фильтры Store
 
 GET `/v2/store/products` и `/:uuid` принимают search, shopUuid, productUuid,
@@ -73,3 +82,12 @@ productStatus, productShowing, variantStatus, variantShowing, quantityMin/Max,
 reservedMin/Max, availableMin/Max. HTTP DTO строго преобразует true/false и целые
 числа; проверяет статусы, границы и min <= max. Тот же query передается в Store.
 Текстовый search — только FTS по согласованным полям, без ILIKE/LIKE.
+
+События store.category.created/updated из outbox нормализуются RealtimeController
+в CategoryEntity и delivery channel categories с исходным eventUuid.
+
+## Категории товара Store
+
+- Store Product связан с несколькими конечными категориями своего магазина.
+- categoryUuids в create/update задаёт полный набор; [] очищает, отсутствие поля в PATCH сохраняет привязки.
+- Все изменения, версия и outbox фиксируются одной транзакцией. Чужие категории, ветви и дубли отклоняются.

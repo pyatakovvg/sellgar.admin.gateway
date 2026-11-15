@@ -1,3 +1,6 @@
+import { CategoryEntity } from '@/api/store_srv/v1/category/entity/category.entity';
+import { CategoryChangedEventDto } from '../dto/category-changed-event.dto';
+import { CATEGORY_CREATED_PATTERN, CATEGORY_UPDATED_PATTERN } from '../realtime.constants';
 import { Controller, Logger } from '@nestjs/common';
 import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
 import { instanceToPlain, plainToInstance } from 'class-transformer';
@@ -57,6 +60,33 @@ export class RealtimeController {
         occurredAt: event.occurredAt,
         channel: 'offers',
         payload: instanceToPlain(rawStoreProduct) as Record<string, unknown>,
+      });
+    });
+  }
+
+  @EventPattern<string>(CATEGORY_CREATED_PATTERN)
+  async categoryCreated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
+    await this.categoryChanged(payload, context);
+  }
+
+  @EventPattern<string>(CATEGORY_UPDATED_PATTERN)
+  async categoryUpdated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
+    await this.categoryChanged(payload, context);
+  }
+
+  private async categoryChanged(payload: unknown, context: RmqContext): Promise<void> {
+    await this.consume(context, async () => {
+      const event = plainToInstance(CategoryChangedEventDto, payload);
+      await this.validateInput(event);
+      const category = plainToInstance(CategoryEntity, event.payload, { excludeExtraneousValues: true });
+      await this.validateInput(category);
+      await this.publisher.publish({
+        eventUuid: event.eventUuid,
+        eventType: event.eventType,
+        schemaVersion: event.schemaVersion,
+        occurredAt: event.occurredAt,
+        channel: 'categories',
+        payload: instanceToPlain(category) as Record<string, unknown>,
       });
     });
   }
