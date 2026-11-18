@@ -16,6 +16,8 @@ cookie/session auth, CORS, guards и общий exception filter.
 - `src/api/shop_srv/v1` - admin HTTP-контракт магазинов; сейчас сохраняет публичный route `/v2/shops`, но ходит в `SHOP_COMMAND_SERVICE`.
 - `src/api/store_srv/v1` - admin HTTP-контракты продаваемых товаров, цен,
   валют и складских данных; не смешивать с `product_srv/v2`.
+- `src/api/cart_srv/v1` - отдельная ветка просмотра и изменения состава корзин;
+  `ApiCartV1Module`, `CART_COMMAND_SERVICE`, очередь `AMQP_CART_SRV_COMMAND_QUEUE`.
 - `src/api/realtime` - преобразование доменных events в единый
   `realtime.delivery.requested.v1`; payload собирается через тот же admin
   read-model composer, что использует HTTP.
@@ -91,3 +93,19 @@ reservedMin/Max, availableMin/Max. HTTP DTO строго преобразует 
 - Store Product связан с несколькими конечными категориями своего магазина.
 - categoryUuids в create/update задаёт полный набор; [] очищает, отсутствие поля в PATCH сохраняет привязки.
 - Все изменения, версия и outbox фиксируются одной транзакцией. Чужие категории, ветви и дубли отклоняются.
+
+## Корзины
+
+`/v1/carts` находится под общим SessionAuthGuard. GET списка/карточки использует
+`cart.admin.getAll/getByUuid`, не создает корзин и позволяет просмотреть закрытые.
+POST `/:uuid/items`, PATCH/DELETE `/:uuid/items/:recordUuid` вызывают только
+`cart.admin.item.add/setQuantity/remove`. Cart определяет владельца и магазин
+существующей корзины сам; HTTP body не задает ownerUuid/shopUuid/cartUuid.
+Gateway добавляет idempotencyKey внутренней RMQ-команде; в HTTP body ключа нет.
+PATCH/DELETE требуют version строки.
+Checkout, завершение оформления и закрытие владельца через HTTP не открываются.
+
+## Порядок учётных записей
+
+- `AccountingRecord.order` — неотрицательное целое, уникальное внутри оффера. Store возвращает records по order; дата и UUID не задают отображение.
+- Metadata-команда принимает order у записи; отсутствие сохраняет текущий порядок, новая запись без order добавляется в конец. Перестановка сохраняется атомарно с версией Store Product и событием; идентичность и остатки не меняются.
