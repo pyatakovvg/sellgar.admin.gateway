@@ -1,0 +1,68 @@
+image:
+  repository: ghcr.io/pyatakovvg/sellgar.admin.gateway
+applicationPort: 4020
+env:
+  AMQP_USERNAME:
+    valueFrom:
+      secretKeyRef:
+        name: rabbitmq-default-user
+        key: username
+  AMQP_PASSWORD:
+    valueFrom:
+      secretKeyRef:
+        name: rabbitmq-default-user
+        key: password
+  SOCKET_TICKET_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: socket-auth
+        key: ticket-secret
+  FINGERPRINT_SECRET:
+    valueFrom:
+      secretKeyRef:
+        name: admin-auth
+        key: fingerprint-secret
+podSecurityContext:
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+volumeMounts:
+- name: environment
+  mountPath: /app/.env
+  subPath: .env
+  readOnly: true
+- name: temporary-files
+  mountPath: /tmp
+volumes:
+- name: environment
+  configMap:
+    name: admin-gateway-env
+- name: temporary-files
+  emptyDir:
+    sizeLimit: 32Mi
+probes:
+  startup:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 2
+    failureThreshold: 90
+  readiness:
+    httpGet:
+      path: /health
+      port: http
+    periodSeconds: 5
+  liveness:
+    tcpSocket:
+      port: http
+    periodSeconds: 10
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    memory: 512Mi
+ingress:
+  enabled: true
+  path: /api/admin
+  stripPrefix: true

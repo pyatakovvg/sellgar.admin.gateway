@@ -113,7 +113,7 @@ store product, отображение цены и валюты.
 
 ## Ветка Cart API
 
-`src/api/cart_srv/v1` повторяет структуру сервисных веток gateway: `ApiCartV1Module`,
+`code/src/api/cart_srv/v1` повторяет структуру сервисных веток gateway: `ApiCartV1Module`,
 RMQ client в `shared`, модуль `cart` с `presentation`, `application` и `domain`.
 Ответы преобразуются и проверяются через Entity. Сервису передается только его
 административный контракт; HTTP доступ защищен общим SessionAuthGuard.
@@ -174,3 +174,14 @@ Gateway остаются отдельной интеграцией. HTTP не о
 В публичной карточке нет sourceVersions, shop.sourceVersion и checkoutUuid.
 Доступный остаток называется availableQuantity; версия корзины в результате
 записи — cartVersion. Внутренние поля Cart адаптируются в gateway.
+
+## Kubernetes deployment
+
+Sources and local `.env` are under `code/`. Run Yarn commands from `code/`.
+`Dockerfile` builds Node.js 24 production output; aliases are resolved during build.
+The image contains no environment credentials. Kubernetes mounts the environment's
+ConfigMap as `/app/.env`; Secrets are injected with `secretKeyRef` and take precedence.
+`helm/values.app.yaml` uses the shared infrastructure chart; `helm/dev/values.yaml`
+owns public dev configuration. PostgreSQL migrations run once as an Argo Sync Job
+before Socket deployment, after its ConfigMap exists. Other gateways have no DB.
+Only Traefik exposes the gateway; service and broker addresses stay inside Kubernetes.

@@ -12,6 +12,7 @@ async function bootstrap() {
   const logger = new Logger();
 
   const app = await NestFactory.create(AppModule);
+  app.enableShutdownHooks();
   const config = app.get(ConfigService);
 
   app.use(cookieParser());

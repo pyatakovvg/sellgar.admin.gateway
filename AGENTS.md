@@ -6,23 +6,23 @@ cookie/session auth, CORS, guards и общий exception filter.
 
 ## Что здесь находится
 
-- `src/main.ts` - HTTP bootstrap, CORS из `ORIGINS`, global validation pipe,
+- `code/src/main.ts` - HTTP bootstrap, CORS из `ORIGINS`, global validation pipe,
   exception filter и RMQ consumers identity/realtime events.
-- `src/app.module.ts` - композиция admin API, auth/session/token модулей, product v2 API и общих сервисов.
-- `src/api/identity_srv` - admin adapter к `services/identity_srv`; внутри
+- `code/src/app.module.ts` - композиция admin API, auth/session/token модулей, product v2 API и общих сервисов.
+- `code/src/api/identity_srv` - admin adapter к `services/identity_srv`; внутри
   `api/*` лежат внешние контракты, а `helpers/session-auth` содержит
   gateway-side session auth обвязку.
-- `src/api/product_srv/v2` - admin-контракты управления каталогом.
-- `src/api/shop_srv/v1` - admin HTTP-контракт магазинов; сейчас сохраняет публичный route `/v2/shops`, но ходит в `SHOP_COMMAND_SERVICE`.
-- `src/api/store_srv/v1` - admin HTTP-контракты продаваемых товаров, цен,
+- `code/src/api/product_srv/v2` - admin-контракты управления каталогом.
+- `code/src/api/shop_srv/v1` - admin HTTP-контракт магазинов; сейчас сохраняет публичный route `/v2/shops`, но ходит в `SHOP_COMMAND_SERVICE`.
+- `code/src/api/store_srv/v1` - admin HTTP-контракты продаваемых товаров, цен,
   валют и складских данных; не смешивать с `product_srv/v2`.
-- `src/api/cart_srv/v1` - отдельная ветка просмотра и изменения состава корзин;
+- `code/src/api/cart_srv/v1` - отдельная ветка просмотра и изменения состава корзин;
   `ApiCartV1Module`, `CART_COMMAND_SERVICE`, очередь `AMQP_CART_SRV_COMMAND_QUEUE`.
-- `src/api/realtime` - преобразование доменных events в единый
+- `code/src/api/realtime` - преобразование доменных events в единый
   `realtime.delivery.requested.v1`; payload собирается через тот же admin
   read-model composer, что использует HTTP.
-- `src/api/file_srv/v1` - admin-доступ к файловому сервису.
-- `src/common` - только общая инфраструктура gateway, сейчас exception filter.
+- `code/src/api/file_srv/v1` - admin-доступ к файловому сервису.
+- `code/src/common` - только общая инфраструктура gateway, сейчас exception filter.
 
 ## Правила изменений
 
@@ -41,7 +41,7 @@ cookie/session auth, CORS, guards и общий exception filter.
 - Изображения товара в admin API относятся к варианту товара:
   `POST /v2/variants/:uuid/images` и
   `DELETE /v2/variants/:uuid/images/:imageUuid`.
-- Не превращайте `src/common` или `helpers` в свалку feature-specific файлов:
+- Не превращайте `code/src/common` или `helpers` в свалку feature-specific файлов:
   helper должен иметь понятного владельца и короткую структуру.
 - Не меняйте RMQ queues/exchange без проверки `.env` контракта и потребителей событий.
 - Не публикуйте domain events напрямую в Socket Gateway. Admin Gateway сохраняет

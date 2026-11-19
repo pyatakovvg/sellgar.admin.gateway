@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HealthModule } from './api/health/health.module';
 import { HttpModule } from '@nestjs/axios';
 
 import { ApiProductV2Module } from '@/api/product_srv/v2/api.module';
@@ -13,6 +14,7 @@ import { IdentitySrvModule } from '@/api/identity_srv/identity-srv.module';
 
 @Module({
   imports: [
+    HealthModule,
     IdentitySrvModule,
     ApiProductV2Module,
     ApiShopV1Module,
