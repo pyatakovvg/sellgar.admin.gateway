@@ -35,29 +35,26 @@ Gateway не должен владеть доменной логикой сер�
 
 ```text
 .
-├── package.json
-├── .env.example
-├── nest-cli.json
-├── tsconfig.json
-├── tsconfig.build.json
-├── src/
-│   ├── main.ts
-│   ├── app.module.ts
-│   ├── api/
-│   ├── common/
-│   └── config/
+├── code/                 # package.json, Yarn, src/, local .env
+├── helm/
+│   ├── values.app.yaml   # shared chart settings
+│   ├── dev/values.yaml   # dev ConfigMap
+│   └── prod/values.yaml  # production values, not activated yet
+├── .github/              # CI and manual release promotion
+├── Dockerfile
+├── README.md
 └── AGENTS.md
 ```
 
 ## Установка
 
-Из корня репозитория:
+Из каталога `code/`:
 
 ```bash
 yarn install
 ```
 
-Репозиторий использует Yarn 3.6.1 и `nodeLinker: node-modules`.
+Репозиторий использует Yarn 4.18.0 и `nodeLinker: node-modules`.
 
 Требуемая версия Node.js: 24+.
 
@@ -82,13 +79,13 @@ Gateway выставляет session cookie без `maxAge`/`expires`. Срок 
 Запуск:
 
 ```bash
-yarn start:dev
+yarn start:admin_gw.dev
 ```
 
 Production-like старт после сборки:
 
 ```bash
-yarn build
+yarn build:admin_gw
 yarn start
 ```
 
@@ -97,14 +94,14 @@ yarn start
 Минимальная проверка перед commit:
 
 ```bash
-yarn build
+yarn build:admin_gw
 ```
 
 GitHub Actions запускает:
 
 ```bash
 yarn install --immutable
-yarn build
+yarn build:admin_gw
 ```
 
 После изменений в product/store/shop разделении дополнительно проверять ручной
