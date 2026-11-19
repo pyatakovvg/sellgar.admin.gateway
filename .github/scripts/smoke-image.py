@@ -73,6 +73,8 @@ try:
             time.sleep(1)
         else:
             raise RuntimeError('Gateway health timeout')
+        subprocess.run(['docker', 'exec', '-i', app, 'node', '--env-file=.env'],
+                       input=pathlib.Path('.github/scripts/smoke-store.cjs').read_text(), text=True, check=True)
         assert docker('exec', app, 'id', '-u') == '1000'
         print(f'{kind}: image, mounted .env, dependencies and non-root health passed')
 except Exception:
