@@ -6,11 +6,11 @@ configmaps:
   enabled: true
   filename: .env
   data: |
-    PORT=4020
+    PORT=8080
     BASE_URL=http://dev.sellgar.io/api/admin
     ORIGINS=http://dev.sellgar.io
-    API_FILE_SRV=http://file-service:5040
-    API_MEDIA_SRV=http://media-service:5050
+    API_FILE_SRV=http://file-service:8080
+    API_MEDIA_SRV=http://media-service:8080
     AUTH_COOKIE=admin.sid
     AUTH_COOKIE_SECURE=false
     AUTH_COOKIE_SAME_SITE=lax
