@@ -29,36 +29,39 @@ describe(RealtimeController.name, () => {
     expect(channel.nack).not.toHaveBeenCalled();
   });
 
-  it('publishes the Store-owned read model without querying Product service', async () => {
-    const publisher = { publish: jest.fn().mockResolvedValue(undefined) };
-    const { channel, context, message } = createRmqContext();
-    const controller = new RealtimeController(publisher as unknown as RealtimePublisherService);
+  it.each(['store.product.created', 'store.product.updated'] as const)(
+    'publishes the Store-owned read model for %s without querying Product service',
+    async (eventType) => {
+      const publisher = { publish: jest.fn().mockResolvedValue(undefined) };
+      const { channel, context, message } = createRmqContext();
+      const controller = new RealtimeController(publisher as unknown as RealtimePublisherService);
 
-    await controller.storeProductUpdated(
-      createEnvelope('store.product.updated', 'store_product', createRawStoreProductPayload(), 2),
-      context,
-    );
+      await controller.storeProductChanged(
+        createEnvelope(eventType, 'store_product', createRawStoreProductPayload(), 2),
+        context,
+      );
 
-    expect(publisher.publish).toHaveBeenCalledWith(
-      expect.objectContaining({
-        channel: 'offers',
-        eventType: 'store.product.updated',
-        payload: expect.objectContaining({
-          productUuid: '39782b12-1077-4b75-94d2-c783e2ce8817',
-          shopUuid: '1d932a09-5015-4688-a50e-03822fdeb37c',
-          uuid: '5b7e713c-f6c6-4450-b1dc-767a7458bf55',
+      expect(publisher.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          channel: 'offers',
+          eventType,
+          payload: expect.objectContaining({
+            productUuid: '39782b12-1077-4b75-94d2-c783e2ce8817',
+            shopUuid: '1d932a09-5015-4688-a50e-03822fdeb37c',
+            uuid: '5b7e713c-f6c6-4450-b1dc-767a7458bf55',
+          }),
         }),
-      }),
-    );
-    const published = publisher.publish.mock.calls[0][0];
-    expect(published.payload).not.toHaveProperty('article');
-    expect(published.payload.offers[0].records[0]).toMatchObject({
-      article: 'BLUE-S',
-      clarifications: [{ position: 0, value: 'S евростандарт' }],
-      inventory: { recordUuid: '7a061c70-7afc-4514-8d07-954885a8f15b', available: 11 },
-    });
-    expect(channel.ack).toHaveBeenCalledWith(message);
-  });
+      );
+      const published = publisher.publish.mock.calls[0][0];
+      expect(published.payload).not.toHaveProperty('article');
+      expect(published.payload.offers[0].records[0]).toMatchObject({
+        article: 'BLUE-S',
+        clarifications: [{ position: 0, value: 'S евростандарт' }],
+        inventory: { recordUuid: '7a061c70-7afc-4514-8d07-954885a8f15b', available: 11 },
+      });
+      expect(channel.ack).toHaveBeenCalledWith(message);
+    },
+  );
 
   it.each(['categoryCreated', 'categoryUpdated'] as const)(
     'normalizes %s into the categories stream',
@@ -136,7 +139,7 @@ const createRmqContext = () => {
 };
 
 const createEnvelope = (
-  eventType: 'product.updated' | 'store.product.updated',
+  eventType: 'product.updated' | 'store.product.created' | 'store.product.updated',
   aggregateType: 'product' | 'store_product',
   payload: Record<string, unknown>,
   schemaVersion = 1,
@@ -186,6 +189,7 @@ const createRawStoreProductPayload = () => ({
           uuid: '7a061c70-7afc-4514-8d07-954885a8f15b',
           offerUuid: 'b4de3e8e-adde-4408-a78b-a920f92962ce',
           article: 'BLUE-S',
+          order: 0,
           version: 1,
           clarifications: [{ position: 0, value: 'S евростандарт' }],
           inventory: {

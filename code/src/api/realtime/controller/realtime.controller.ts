@@ -10,8 +10,12 @@ import { ProductEntity } from '@/api/product_srv/v2/product/product.entity';
 import { StoreProductEntity as RawStoreProductEntity } from '@/api/store_srv/v1/store-product/entity';
 
 import { ProductUpdatedEventDto } from '../dto/product-updated-event.dto';
-import { StoreProductUpdatedEventDto } from '../dto/store-product-updated-event.dto';
-import { PRODUCT_UPDATED_PATTERN, STORE_PRODUCT_UPDATED_PATTERN } from '../realtime.constants';
+import { StoreProductChangedEventDto } from '../dto/store-product-changed-event.dto';
+import {
+  PRODUCT_UPDATED_PATTERN,
+  STORE_PRODUCT_CREATED_PATTERN,
+  STORE_PRODUCT_UPDATED_PATTERN,
+} from '../realtime.constants';
 import { RealtimePublisherService } from '../service/realtime-publisher.service';
 
 class InvalidRealtimeEventError extends Error {}
@@ -42,10 +46,10 @@ export class RealtimeController {
     });
   }
 
-  @EventPattern<string>(STORE_PRODUCT_UPDATED_PATTERN)
-  async storeProductUpdated(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
+  @EventPattern([STORE_PRODUCT_CREATED_PATTERN, STORE_PRODUCT_UPDATED_PATTERN])
+  async storeProductChanged(@Payload() payload: unknown, @Ctx() context: RmqContext): Promise<void> {
     await this.consume(context, async () => {
-      const event = plainToInstance(StoreProductUpdatedEventDto, payload);
+      const event = plainToInstance(StoreProductChangedEventDto, payload);
       await this.validateInput(event);
 
       const rawStoreProduct = plainToInstance(RawStoreProductEntity, event.payload, {

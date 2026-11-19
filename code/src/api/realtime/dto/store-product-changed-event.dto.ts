@@ -1,11 +1,11 @@
 import { IsIn, IsInt, IsISO8601, IsObject, IsString, IsUUID, Min } from 'class-validator';
 
-export class StoreProductUpdatedEventDto {
+export class StoreProductChangedEventDto {
   @IsUUID()
   eventUuid: string;
 
-  @IsIn(['store.product.updated'])
-  eventType: 'store.product.updated';
+  @IsIn(['store.product.created', 'store.product.updated'])
+  eventType: 'store.product.created' | 'store.product.updated';
 
   @IsInt()
   @Min(1)
