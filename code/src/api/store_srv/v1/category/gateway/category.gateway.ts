@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { CategoryEntity } from '../entity/category.entity';
 import { CreateCategoryDto } from '../controller/dto/create-category.dto';
 import { UpdateCategoryDto } from '../controller/dto/update-category.dto';
@@ -22,11 +23,11 @@ export class CategoryGateway {
   }
 
   create(input: CreateCategoryDto): Promise<CategoryEntity> {
-    return this.request('store.category.create', input, CategoryEntity);
+    return this.request('store.category.create', { ...input, commandId: randomUUID() }, CategoryEntity);
   }
 
   update(uuid: string, input: UpdateCategoryDto): Promise<CategoryEntity> {
-    return this.request('store.category.update', { ...input, uuid }, CategoryEntity);
+    return this.request('store.category.update', { ...input, uuid, commandId: randomUUID() }, CategoryEntity);
   }
 
   private async request<T extends object>(command: string, payload: object, Type: ClassConstructor<T>): Promise<T> {

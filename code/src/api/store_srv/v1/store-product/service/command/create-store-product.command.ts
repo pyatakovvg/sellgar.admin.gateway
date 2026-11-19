@@ -13,9 +13,6 @@ export class CreateStoreProductCommand {
 
   @Expose()
   @IsUUID()
-  commandId: string;
-  @Expose()
-  @IsUUID()
   shopUuid: string;
   @Expose()
   @IsUUID()

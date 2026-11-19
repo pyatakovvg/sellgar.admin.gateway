@@ -5,10 +5,6 @@ import { CategoryFieldsDto } from './category-fields.dto';
 
 export class UpdateCategoryDto extends CategoryFieldsDto {
   @Expose()
-  @IsUUID()
-  commandId: string;
-
-  @Expose()
   @IsInt()
   @Min(1)
   expectedVersion: number;

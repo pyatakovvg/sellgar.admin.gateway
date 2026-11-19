@@ -74,7 +74,7 @@ POST /v2/store/products/catalog/:productUuid/synchronize делает один �
 в Store и валидирует вложенный ответ `{ shopUuid, nodes }`. Категории принадлежат
 Store, не каталогу Product. `GET /v2/store/categories/:uuid` читает карточку;
 POST `/v2/store/categories` создаёт, PATCH `/:uuid` сохраняет поля и родителя
-атомарно. Body содержит commandId, name, description, parentUuid; для создания
+атомарно. Body содержит name, description, parentUuid; для создания
 нужен shopUuid, для правки — expectedVersion. UUID правки берётся из path.
 
 ## Плоские фильтры Store
@@ -109,3 +109,5 @@ Checkout, завершение оформления и закрытие влад
 
 - `AccountingRecord.order` — неотрицательное целое, уникальное внутри оффера. Store возвращает records по order; дата и UUID не задают отображение.
 - Metadata-команда принимает order у записи; отсутствие сохраняет текущий порядок, новая запись без order добавляется в конец. Перестановка сохраняется атомарно с версией Store Product и событием; идентичность и остатки не меняются.
+
+- Внутренний commandId для Store/Category mutations генерирует gateway. HTTP DTO не требует его от frontend; клиентское значение не используется.

@@ -4,9 +4,6 @@ import { IsUUID, IsString, IsOptional, IsInt, Min, MaxLength } from 'class-valid
 export class InventoryMovementCommand {
   @Expose()
   @IsUUID()
-  commandId: string;
-  @Expose()
-  @IsUUID()
   recordUuid: string;
   @Expose()
   @IsInt()

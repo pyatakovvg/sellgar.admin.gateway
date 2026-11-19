@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Injectable, Inject } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { validateOrReject } from 'class-validator';
@@ -44,7 +45,7 @@ export class StoreProductGateway {
   }
 
   async create(dto: CreateStoreProductCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.product.create' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.product.create' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(StoreProductEntity, result);
@@ -55,7 +56,7 @@ export class StoreProductGateway {
   }
 
   async update(dto: UpdateStoreProductCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.product.update' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.product.update' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(StoreProductEntity, result);
@@ -66,7 +67,7 @@ export class StoreProductGateway {
   }
 
   async archive(dto: ArchiveStoreProductCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.product.archive' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.product.archive' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(StoreProductEntity, result);
@@ -77,7 +78,7 @@ export class StoreProductGateway {
   }
 
   async receiptInventory(dto: InventoryMovementCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.inventory.receipt' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.inventory.receipt' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(RecordInventoryEntity, result);
@@ -88,7 +89,7 @@ export class StoreProductGateway {
   }
 
   async writeOffInventory(dto: InventoryMovementCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.inventory.writeOff' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.inventory.writeOff' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(RecordInventoryEntity, result);
@@ -99,7 +100,7 @@ export class StoreProductGateway {
   }
 
   async adjustInventory(dto: AdjustRecordInventoryCommand) {
-    const message = this.storeProxy.send({ cmd: 'store.inventory.adjust' }, dto);
+    const message = this.storeProxy.send({ cmd: 'store.inventory.adjust' }, { ...dto, commandId: randomUUID() });
 
     const result = await firstValueFrom(message);
     const resultInstance = plainToInstance(RecordInventoryEntity, result);

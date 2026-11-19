@@ -23,9 +23,6 @@ export class UpdateStoreProductCommand {
 
   @Expose()
   @IsUUID()
-  commandId: string;
-  @Expose()
-  @IsUUID()
   uuid: string;
   @Expose()
   @IsInt()
