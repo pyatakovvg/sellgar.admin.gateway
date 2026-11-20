@@ -1,18 +1,19 @@
 replicas: 1
 ingress:
-  host: dev.sellgar.io
+  host: admin.dev.sellgar.ru
+  tlsSecretName: sellgar-dev-tls
 configmaps:
 - nameOverride: admin-gateway-env
   enabled: true
   filename: .env
   data: |
     PORT=8080
-    BASE_URL=http://dev.sellgar.io/api/admin
-    ORIGINS=http://dev.sellgar.io
+    BASE_URL=https://admin.dev.sellgar.ru/api/admin
+    ORIGINS=https://admin.dev.sellgar.ru
     API_FILE_SRV=http://file-service:8080
     API_MEDIA_SRV=http://media-service:8080
     AUTH_COOKIE=admin.sid
-    AUTH_COOKIE_SECURE=false
+    AUTH_COOKIE_SECURE=true
     AUTH_COOKIE_SAME_SITE=lax
     AUTH_COOKIE_PATH=/
     SOCKET_TICKET_AUDIENCE=realtime
