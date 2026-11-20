@@ -34,6 +34,8 @@ export const ProductServiceCommand = {
     update: 'catalog.v2.product.update',
     archive: 'catalog.v2.product.archive',
     restore: 'catalog.v2.product.restore',
+    getVariants: 'catalog.v2.product.variant.getAll',
+    getVariant: 'catalog.v2.product.variant.getByUuid',
     createVariant: 'catalog.v2.product.variant.create',
     updateVariant: 'catalog.v2.product.variant.update',
     archiveVariant: 'catalog.v2.product.variant.archive',

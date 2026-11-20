@@ -1,5 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
+import { VariantListEntity } from '../../variant/variant-list.entity';
+import { VariantDetailEntity } from '../../variant/variant-detail.entity';
 import { ImageUploadService, UploadedImage } from '../../shared/application/image-upload.service';
 import { UploadedFile } from '../../shared/application/uploaded-file';
 import { ProductServiceClient } from '../../shared/product-service.client';
@@ -25,6 +27,18 @@ export class ProductService {
 
   getByUuid(uuid: string) {
     return this.productService.request(ProductServiceCommand.product.getByUuid, { uuid }, ProductEntity);
+  }
+
+  getVariants(uuid: string) {
+    return this.productService.request(ProductServiceCommand.product.getVariants, { uuid }, VariantListEntity);
+  }
+
+  getVariant(uuid: string, variantUuid: string) {
+    return this.productService.request(
+      ProductServiceCommand.product.getVariant,
+      { uuid, variantUuid },
+      VariantDetailEntity,
+    );
   }
 
   async create(dto: CreateProductDto, files: UploadedFile[]) {
@@ -76,24 +90,21 @@ export class ProductService {
     }
   }
 
-  async updateVariant(
-    uuid: string,
-    variantUuid: string,
-    dto: UpdateVariantDto,
-    files: UploadedFile[],
-  ) {
+  async updateVariant(uuid: string, variantUuid: string, dto: UpdateVariantDto, files: UploadedFile[]) {
     const uploaded: UploadedImage[] = [];
 
     try {
-      const images = dto.images === undefined
-        ? undefined
-        : await this.imageUpload.resolve(dto.images, files, uploaded);
-      return await this.productService.request(ProductServiceCommand.product.updateVariant, {
-        ...dto,
-        uuid,
-        variantUuid,
-        images,
-      }, ProductEntity);
+      const images = dto.images === undefined ? undefined : await this.imageUpload.resolve(dto.images, files, uploaded);
+      return await this.productService.request(
+        ProductServiceCommand.product.updateVariant,
+        {
+          ...dto,
+          uuid,
+          variantUuid,
+          images,
+        },
+        ProductEntity,
+      );
     } catch (error) {
       await this.imageUpload.rollback(uploaded);
       throw error;
@@ -116,11 +127,7 @@ export class ProductService {
     );
   }
 
-  private async resolveVariantImages(
-    variant: VariantInputDto,
-    files: UploadedFile[],
-    uploaded: UploadedImage[],
-  ) {
+  private async resolveVariantImages(variant: VariantInputDto, files: UploadedFile[], uploaded: UploadedImage[]) {
     const images = await this.imageUpload.resolve(variant.images, files, uploaded);
     return { ...variant, images };
   }

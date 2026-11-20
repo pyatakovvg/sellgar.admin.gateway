@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Query, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
 import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 import { UploadedFile } from '../../shared/application/uploaded-file';
@@ -23,6 +34,16 @@ export class ProductController {
   @Get(':uuid')
   getByUuid(@Param('uuid', ParseUUIDPipe) uuid: string) {
     return this.productService.getByUuid(uuid);
+  }
+
+  @Get(':uuid/variants')
+  getVariants(@Param('uuid', ParseUUIDPipe) uuid: string) {
+    return this.productService.getVariants(uuid);
+  }
+
+  @Get(':uuid/variants/:variantUuid')
+  getVariant(@Param('uuid', ParseUUIDPipe) uuid: string, @Param('variantUuid', ParseUUIDPipe) variantUuid: string) {
+    return this.productService.getVariant(uuid, variantUuid);
   }
 
   @Post()
