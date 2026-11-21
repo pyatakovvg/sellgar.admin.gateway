@@ -2,10 +2,7 @@ replicas: 1
 ingress:
   host: admin.dev.sellgar.ru
   tlsSecretName: sellgar-dev-tls
-configmaps:
-- nameOverride: admin-gateway-env
-  enabled: true
-  filename: .env
+environmentFile:
   data: |
     PORT=8080
     BASE_URL=https://admin.dev.sellgar.ru/api/admin

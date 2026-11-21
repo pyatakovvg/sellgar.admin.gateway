@@ -117,3 +117,9 @@ Checkout, завершение оформления и закрытие влад
 Цена и история находятся в records[].currentPrice / records[].prices, запись идентифицируется recordUuid.
 Общей редактируемой цены оффера нет. priceRange (min/max/currency) приходит из Store;
 BFF не рассчитывает собственный диапазон. Store Product schemaVersion=3, Inventory v2.
+
+## Контракт CI/CD
+
+- Отдельный Docker target `tests` и job `test` обязательны; деплой зависит от успешных тестов.
+- Миграционного образа и job нет.
+- CI/CD и конфигурация описаны в разделе «CI и доставка» README. Python/smoke wrappers удалены; команды Helm/kubectl видны в общих workflows.

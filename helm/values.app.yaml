@@ -1,5 +1,5 @@
 image:
-  repository: ghcr.io/pyatakovvg/sellgar.admin.gateway
+  repository: ghcr.io/sellgar/sellgar.admin.gateway
 imagePullSecrets:
 - name: ghcr-pull
 applicationPort: 8080
@@ -29,16 +29,9 @@ podSecurityContext:
   runAsGroup: 1000
   fsGroup: 1000
 volumeMounts:
-- name: environment
-  mountPath: /app/.env
-  subPath: .env
-  readOnly: true
 - name: temporary-files
   mountPath: /tmp
 volumes:
-- name: environment
-  configMap:
-    name: admin-gateway-env
 - name: temporary-files
   emptyDir:
     sizeLimit: 32Mi
@@ -68,3 +61,7 @@ ingress:
   enabled: true
   path: /api/admin
   stripPrefix: true
+environmentFile:
+  enabled: true
+  filename: .env
+  mountPath: /app/.env
