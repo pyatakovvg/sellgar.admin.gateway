@@ -63,6 +63,45 @@ describe(RealtimeController.name, () => {
     },
   );
 
+  it('delivers a v3 accounting record price without exposing the former offer price', async () => {
+    const publisher = { publish: jest.fn().mockResolvedValue(undefined) };
+    const { channel, context, message } = createRmqContext();
+    const controller = new RealtimeController(publisher as unknown as RealtimePublisherService);
+    const payload = createRawStoreProductPayload();
+    const record = payload.offers[0].records[0];
+    const price = {
+      uuid: '9b3530f1-f736-4c0f-a482-0287c4961ac4',
+      recordUuid: record.uuid,
+      value: '109990.00',
+      currencyCode: 'RUB',
+      currency: { code: 'RUB', value: 'руб.', order: 0, createdAt: payload.createdAt, updatedAt: payload.updatedAt },
+      startsAt: payload.createdAt,
+      endsAt: null,
+      reason: null,
+      createdAt: payload.createdAt,
+    };
+    await controller.storeProductChanged(
+      createEnvelope(
+        'store.product.updated',
+        'store_product',
+        {
+          ...payload,
+          offers: [{ ...payload.offers[0], records: [{ ...record, currentPrice: price, prices: [price] }] }],
+        },
+        3,
+      ),
+      context,
+    );
+    expect(channel.ack).toHaveBeenCalledWith(message);
+    const published = publisher.publish.mock.calls[0][0];
+    expect(published.schemaVersion).toBe(3);
+    expect(published.payload.offers[0]).not.toHaveProperty('currentPrice');
+    expect(published.payload.offers[0].records[0].currentPrice).toMatchObject({
+      recordUuid: record.uuid,
+      value: '109990.00',
+    });
+  });
+
   it.each(['categoryCreated', 'categoryUpdated'] as const)(
     'normalizes %s into the categories stream',
     async (method) => {

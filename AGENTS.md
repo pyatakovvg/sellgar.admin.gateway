@@ -111,3 +111,9 @@ Checkout, завершение оформления и закрытие влад
 - Metadata-команда принимает order у записи; отсутствие сохраняет текущий порядок, новая запись без order добавляется в конец. Перестановка сохраняется атомарно с версией Store Product и событием; идентичность и остатки не меняются.
 
 - Внутренний commandId для Store/Category mutations генерирует gateway. HTTP DTO не требует его от frontend; клиентское значение не используется.
+
+## Цена учётки
+
+Цена и история находятся в records[].currentPrice / records[].prices, запись идентифицируется recordUuid.
+Общей редактируемой цены оффера нет. priceRange (min/max/currency) приходит из Store;
+BFF не рассчитывает собственный диапазон. Store Product schemaVersion=3, Inventory v2.

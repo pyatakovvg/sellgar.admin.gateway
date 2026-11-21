@@ -1,3 +1,4 @@
+import { legacyStoreProduct } from '../dto/legacy-store-product';
 import { CategoryEntity } from '@/api/store_srv/v1/category/entity/category.entity';
 import { CategoryChangedEventDto } from '../dto/category-changed-event.dto';
 import { CATEGORY_CREATED_PATTERN, CATEGORY_UPDATED_PATTERN } from '../realtime.constants';
@@ -52,9 +53,13 @@ export class RealtimeController {
       const event = plainToInstance(StoreProductChangedEventDto, payload);
       await this.validateInput(event);
 
-      const rawStoreProduct = plainToInstance(RawStoreProductEntity, event.payload, {
-        excludeExtraneousValues: true,
-      });
+      const rawStoreProduct = plainToInstance(
+        RawStoreProductEntity,
+        event.schemaVersion === 2 ? legacyStoreProduct(event.payload) : event.payload,
+        {
+          excludeExtraneousValues: true,
+        },
+      );
       await this.validateInput(rawStoreProduct);
 
       await this.publisher.publish({

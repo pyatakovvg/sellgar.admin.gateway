@@ -8,7 +8,7 @@ export class StoreProductChangedEventDto {
   eventType: 'store.product.created' | 'store.product.updated';
 
   @IsInt()
-  @Min(1)
+  @IsIn([2, 3])
   schemaVersion: number;
 
   @IsString()
